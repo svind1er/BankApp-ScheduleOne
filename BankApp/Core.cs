@@ -31,10 +31,13 @@ namespace BankApp
         private bool _iconModified = false;
 
         private float _selectedAmount = 0f;
+        private float _weeklyDepositSum = 0f;
+        private float _weeklyDepositLimit = 0f;
 
         private Text _onlineBalanceText;
         private Text _cashBalanceText;
         private Text _selectedAmountText;
+        private Text _weeklyAmountText;
 
         private const string TEMPLATE_APP_NAME = "Messages";
         private const string APP_OBJECT_NAME = "BankingApp";
@@ -357,6 +360,17 @@ namespace BankApp
             _cashBalanceText.alignment = TextAnchor.MiddleCenter;
             _cashBalanceText.color = Color.white;
 
+            GameObject weeklyLimitObj = new GameObject("WeeklyDepositLimit");
+            weeklyLimitObj.transform.SetParent(container.transform, false);
+            RectTransform limitRt = weeklyLimitObj.AddComponent<RectTransform>();
+            limitRt.anchorMin = new Vector2(0f, 0.75f);
+            limitRt.anchorMax = new Vector2(1f, 0.85f);
+            _weeklyAmountText = weeklyLimitObj.AddComponent<Text>();
+            _weeklyAmountText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            _weeklyAmountText.fontSize = 22;
+            _weeklyAmountText.alignment = TextAnchor.MiddleCenter;
+            _weeklyAmountText.color = Color.white;
+
             GameObject selectedAmountObj = new GameObject("SelectedAmountText");
             selectedAmountObj.transform.SetParent(container.transform, false);
             RectTransform selectedRt = selectedAmountObj.AddComponent<RectTransform>();
@@ -624,6 +638,8 @@ namespace BankApp
         private void UpdateBalanceText()
         {
             MoneyManager moneyManager = NetworkSingleton<MoneyManager>.Instance;
+            _weeklyDepositSum = Il2CppScheduleOne.Money.ATM.WeeklyDepositSum;
+            _weeklyDepositLimit = Il2CppScheduleOne.Money.ATM.WEEKLY_DEPOSIT_LIMIT;
 
             if (moneyManager != null)
             {
@@ -635,6 +651,10 @@ namespace BankApp
                 if (_cashBalanceText != null)
                 {
                     _cashBalanceText.text = $"Cash Balance: ${moneyManager.cashBalance:N2}";
+                }
+                if (_weeklyAmountText != null)
+                {
+                    _weeklyAmountText.text = $"Weekly Limit: ${_weeklyDepositSum}/${_weeklyDepositLimit}";
                 }
             }
         }
