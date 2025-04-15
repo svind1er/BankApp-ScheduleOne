@@ -16,6 +16,8 @@ using UnityEngine.PlayerLoop;
 
 [assembly: MelonInfo(typeof(BankApp.Core), "BankApp", "1.0.0", "svindler, Lalisa", null)]
 [assembly: MelonGame("TVGS", "Schedule I")]
+[assembly: MelonColor(0, 255, 0, 249)]
+[assembly: MelonAuthorColor(0, 234, 0, 255)]
 
 namespace BankApp
 {
