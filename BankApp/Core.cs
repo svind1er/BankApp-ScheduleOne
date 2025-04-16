@@ -516,20 +516,17 @@ namespace BankApp
             _maxButton.onClick.RemoveAllListeners();
             _maxButton.onClick.AddListener((UnityAction)(() =>
             {
+                MoneyManager moneyManager = NetworkSingleton<MoneyManager>.Instance;
+                if (moneyManager == null) return;
+
                 if (_currentTab == TabType.Withdraw)
                 {
-                    if (moneyManager != null)
-                        SetSelectedAmount((int)moneyManager.onlineBalance);
+                    SetSelectedAmount((int)moneyManager.onlineBalance);
                 }
                 else
                 {
-                    if (moneyManager != null)
-                    {
-                        float cashBal = moneyManager.cashBalance;
-                        int weeklyLeft = DepositMax();
-                        int depositMax = (int)Mathf.Min(cashBal, (float)weeklyLeft);
-                        SetSelectedAmount(depositMax);
-                    }
+                    int depositMax = (int)Mathf.Min(moneyManager.cashBalance, DepositMax());
+                    SetSelectedAmount(depositMax);
                 }
             }));
 
