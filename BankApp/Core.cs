@@ -48,7 +48,9 @@ namespace BankApp
         private Button _maxButton;
         private Button _confirmButton;
 
-        private enum TabType { Withdraw, Deposit }
+        private enum TabType
+        { Withdraw, Deposit }
+
         private TabType _currentTab = TabType.Withdraw;
         private GameObject _withdrawTab;
         private GameObject _depositTab;
@@ -430,7 +432,7 @@ namespace BankApp
             _onlineBalanceText = CreateText("OnlineBalance", infoPanel.transform, 33, Color.cyan);
             _cashBalanceText = CreateText("CashBalance", infoPanel.transform, 33, Color.green);
             _selectedAmountText = CreateText("SelectedAmount", infoPanel.transform, 33, Color.yellow);
-            _selectedAmountText.text = "Selected: $0.00";
+            _selectedAmountText.text = "Deposit: $0.00";
 
             GameObject tabPanel = new GameObject("TabPanel");
             tabPanel.transform.SetParent(container.transform, false);
@@ -447,10 +449,10 @@ namespace BankApp
             tabLayout.childAlignment = TextAnchor.MiddleCenter;
             tabLayout.childForceExpandWidth = true;
 
-            GameObject withdrawTab = CreateTabButton(tabPanel, "Withdraw", true);
-            _withdrawTab = withdrawTab;
-            GameObject depositTab = CreateTabButton(tabPanel, "Deposit", false);
+            GameObject depositTab = CreateTabButton(tabPanel, "Deposit", true);
             _depositTab = depositTab;
+            GameObject withdrawTab = CreateTabButton(tabPanel, "Withdraw", false);
+            _withdrawTab = withdrawTab;
 
             GameObject buttonGrid = new GameObject("AmountButtons");
             buttonGrid.transform.SetParent(container.transform, false);
