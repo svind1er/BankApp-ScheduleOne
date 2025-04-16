@@ -46,6 +46,12 @@ namespace BankApp
         private Button _depositButton;
         private Button _resetButton;
         private Button _maxButton;
+        private Button _confirmButton;
+
+        private enum TabType { Withdraw, Deposit }
+        private TabType _currentTab = TabType.Withdraw;
+        private GameObject _withdrawTab;
+        private GameObject _depositTab;
 
         public override void OnInitializeMelon()
         {
@@ -325,6 +331,48 @@ namespace BankApp
             }
         }
 
+        private void SetActiveTab(TabType tab)
+        {
+            _currentTab = tab;
+
+            Image withdrawImg = _withdrawTab.GetComponent<Image>();
+            Image depositImg = _depositTab.GetComponent<Image>();
+
+            withdrawImg.color = (_currentTab == TabType.Withdraw) ?
+                new Color(0.2f, 0.4f, 0.8f) : new Color(0.5f, 0.5f, 0.5f);
+            depositImg.color = (_currentTab == TabType.Deposit) ?
+                new Color(0.2f, 0.4f, 0.8f) : new Color(0.5f, 0.5f, 0.5f);
+
+            Button withdrawBtn = _withdrawTab.GetComponent<Button>();
+            Button depositBtn = _depositTab.GetComponent<Button>();
+
+            ColorBlock withdrawColors = withdrawBtn.colors;
+            ColorBlock depositColors = depositBtn.colors;
+
+            withdrawColors.normalColor = withdrawImg.color;
+            depositColors.normalColor = depositImg.color;
+
+            withdrawBtn.colors = withdrawColors;
+            depositBtn.colors = depositColors;
+
+            UpdateUIForCurrentTab();
+
+            UpdateCofnrmButtonLayout();
+        }
+
+        private void UpdateUIForCurrentTab()
+        {
+            if (_currentTab == TabType.Withdraw)
+            {
+                _selectedAmountText.text = $"Withdraw: ${_selectedAmount:N2}";
+            }
+            else
+            {
+                _selectedAmountText.text = $"Deposit: ${_selectedAmount:N2}";
+            }
+            UpdateSelectedAmount(0);
+        }
+
         private void BuildBankingAppUI(GameObject container)
         {
             MoneyManager moneyManager = NetworkSingleton<MoneyManager>.Instance;
@@ -384,10 +432,30 @@ namespace BankApp
             _selectedAmountText = CreateText("SelectedAmount", infoPanel.transform, 33, Color.yellow);
             _selectedAmountText.text = "Selected: $0.00";
 
+            GameObject tabPanel = new GameObject("TabPanel");
+            tabPanel.transform.SetParent(container.transform, false);
+            RectTransform tabRt = tabPanel.AddComponent<RectTransform>();
+            tabRt.anchorMin = new Vector2(0.05f, 0.8f);
+            tabRt.anchorMax = new Vector2(0.95f, 0.9f);
+            tabRt.offsetMin = Vector2.zero;
+            tabRt.offsetMax = Vector2.zero;
+
+            tabPanel.transform.localPosition = new Vector3(0f, 200f, 0f);
+
+            HorizontalLayoutGroup tabLayout = tabPanel.AddComponent<HorizontalLayoutGroup>();
+            tabLayout.spacing = 15;
+            tabLayout.childAlignment = TextAnchor.MiddleCenter;
+            tabLayout.childForceExpandWidth = true;
+
+            GameObject withdrawTab = CreateTabButton(tabPanel, "Withdraw", true);
+            _withdrawTab = withdrawTab;
+            GameObject depositTab = CreateTabButton(tabPanel, "Deposit", false);
+            _depositTab = depositTab;
+
             GameObject buttonGrid = new GameObject("AmountButtons");
             buttonGrid.transform.SetParent(container.transform, false);
             RectTransform gridRt = buttonGrid.AddComponent<RectTransform>();
-            buttonGrid.transform.localPosition = new Vector2(249f, -250f);
+            buttonGrid.transform.localPosition = new Vector2(249f, -400);
             buttonGrid.transform.localScale = new Vector2(1.4f, 1.4f);
             gridRt.anchorMin = new Vector2(0.05f, 0.25f);
             gridRt.anchorMax = new Vector2(0.95f, 0.74f);
@@ -434,27 +502,51 @@ namespace BankApp
                 AddAmountButtonListener(btn, amt);
             }
 
-            GameObject withdrawBtn = CreateActionButton(container, "Withdraw", new Vector2(0.05f, 0.05f),
-                new Vector2(0.45f, 0.15f), new Color(0.8f, .1f, .1f), 35, 1f, 1f);
-            _withdrawButton = withdrawBtn.GetComponent<Button>();
-            _withdrawButton.onClick.AddListener((UnityAction)(() => OnWithdrawPressed()));
+            GameObject actionBtn = CreateActionButton(container, "Confirm", new Vector2(0.3f, 0.05f),
+                new Vector2(0.7f, 0.15f), new Color(0.3f, 0.6f, 0.3f), 35, 150f, 1f);
+            _confirmButton = actionBtn.GetComponent<Button>();
+            _confirmButton.onClick.AddListener((UnityAction)(() => OnConfirmPressed()));
 
-            GameObject depositBtn = CreateActionButton(container, "Deposit", new Vector2(0.55f, 0.05f),
-                new Vector2(0.95f, 0.15f), new Color(.1f, .8f, .1f), 35, 1f, 1f);
-            _depositButton = depositBtn.GetComponent<Button>();
-            _depositButton.onClick.AddListener((UnityAction)(() => OnDepositPressed()));
+            UpdateCofnrmButtonLayout();
 
             GameObject resetbtn = CreateActionButton(container, "Clear", new Vector2(0.3f, 0.1f), new Vector2(0.7f, 0.2f), new Color(.6f, .7f, .8f, 1f), 35, -37f, -49.6f);
             _resetButton = resetbtn.GetComponent<Button>();
-            _resetButton.transform.localPosition = new Vector2(-122.169f, -171.375f);
+            _resetButton.transform.localPosition = new Vector2(-122.169f, -320f);
             _resetButton.onClick.AddListener((UnityAction)(() => UpdateSelectedAmount(0)));
 
             GameObject maxBtn = CreateActionButton(container, $"MAX", new Vector2(0.3f, 0.1f), new Vector2(0.7f, 0.2f), new Color(.6f, .7f, .8f, 1f), 35, -37f, -49.6f);
             _maxButton = maxBtn.GetComponent<Button>();
-            _maxButton.transform.localPosition = new Vector2(124.269f, -171.375f);
+            _maxButton.transform.localPosition = new Vector2(124.269f, -320f);
             _maxButton.onClick.AddListener((UnityAction)(() => UpdateSelectedAmount(DepositMax())));
 
             MelonLogger.Msg("bank app working smile?.");
+        }
+
+
+        private void UpdateCofnrmButtonLayout()
+        {
+            if (_confirmButton == null)
+                return;
+
+            Text btnText = _confirmButton.GetComponentInChildren<Text>();
+            if (_currentTab == TabType.Withdraw)
+            {
+                btnText.text = "Withdraw";
+                _confirmButton.GetComponent<Image>().color = new Color(0.8f, 0.3f, 0.3f, 1f);
+            }
+            else
+            {
+                btnText.text = "Deposit";
+                _confirmButton.GetComponent<Image>().color = new Color(0.3f, 0.8f, 0.3f, 1f);
+            }
+        }
+
+        private void OnConfirmPressed()
+        {
+            if (_currentTab == TabType.Withdraw)
+                OnWithdrawPressed();
+            else
+                OnDepositPressed();
         }
 
         private void AttachButtonClickEvent(GameObject appPanelGameObject)
@@ -513,6 +605,49 @@ namespace BankApp
                 MelonLogger.Msg("Error creating texture: " + ex.Message);
                 return null;
             }
+        }
+
+        private GameObject CreateTabButton(GameObject parent, string label, bool isActive)
+        {
+            GameObject tabObj = new GameObject($"Tab_{label}");
+            tabObj.transform.SetParent(parent.transform, false);
+            RectTransform rt = tabObj.AddComponent<RectTransform>();
+            rt.sizeDelta = new Vector2(180f, 50f);
+
+            Image img = tabObj.AddComponent<Image>();
+            img.color = isActive ? new Color(0.2f, 0.4f, 0.8f) : new Color(0.5f, 0.5f, 0.5f);
+
+            Button btn = tabObj.AddComponent<Button>();
+            btn.targetGraphic = img;
+
+            ColorBlock cb = btn.colors;
+            cb.normalColor = img.color;
+            cb.highlightedColor = new Color(img.color.r + 0.1f, img.color.g + 0.1f, img.color.b + 0.1f);
+            cb.pressedColor = new Color(img.color.r - 0.1f, img.color.g - 0.1f, img.color.b - 0.1f);
+            btn.colors = cb;
+
+            GameObject textGO = new GameObject("Text");
+            textGO.transform.SetParent(tabObj.transform, false);
+            RectTransform textRt = textGO.AddComponent<RectTransform>();
+            textRt.anchorMin = Vector2.zero;
+            textRt.anchorMax = Vector2.one;
+            textRt.offsetMin = Vector2.zero;
+            textRt.offsetMax = Vector2.zero;
+
+            Text btnText = textGO.AddComponent<Text>();
+            btnText.text = label;
+            btnText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            btnText.alignment = TextAnchor.MiddleCenter;
+            btnText.color = Color.white;
+            btnText.fontSize = 24;
+            btnText.fontStyle = FontStyle.Bold;
+
+            if (label == "Withdraw")
+                btn.onClick.AddListener((UnityAction)(() => SetActiveTab(TabType.Withdraw)));
+            else
+                btn.onClick.AddListener((UnityAction)(() => SetActiveTab(TabType.Deposit)));
+
+            return tabObj;
         }
 
         private GameObject CreateActionButton(GameObject parent, string label, Vector2 anchorMin, Vector2 anchorMax, Color color, int fontSize, float buttonLength, float buttonWidth)
@@ -596,8 +731,7 @@ namespace BankApp
                 }
                 else
                 {
-                    MelonLogger.Msg(
-                        $"[WITHDRAW] Insufficient funds smile. Online Balance: ${moneyManager.onlineBalance:N2}, Attempted: ${_selectedAmount:N2}");
+                    MelonLogger.Msg($"[WITHDRAW] Insufficient funds smile. Online Balance: ${moneyManager.onlineBalance:N2}, Attempted: ${_selectedAmount:N2}");
                 }
             }
             else
@@ -676,7 +810,10 @@ namespace BankApp
 
             if (_selectedAmountText != null)
             {
-                _selectedAmountText.text = $"Selected: ${_selectedAmount:N2}";
+                if (_currentTab == TabType.Withdraw)
+                    _selectedAmountText.text = $"Withdraw: ${_selectedAmount:N2}";
+                else
+                    _selectedAmountText.text = $"Deposit: ${_selectedAmount:N2}";
             }
         }
 
