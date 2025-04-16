@@ -18,7 +18,7 @@ namespace BankApp
 {
     public class Core : MelonMod
     {
-        private readonly string iconUrl = "https://i.imgur.com/khfAWKl.jpeg";
+        private readonly string iconUrl = "https://i.imgur.com/hsVNqRx.png";
 
         private readonly string iconFileName = "BankAppIcon.png";
         private GameObject _bankingAppPanel;
@@ -40,7 +40,7 @@ namespace BankApp
 
         private const string TEMPLATE_APP_NAME = "Messages";
         private const string APP_OBJECT_NAME = "BankingApp";
-        private const string APP_LABEL_TEXT = "Banking";
+        private const string APP_LABEL_TEXT = "Bank";
 
         private Button _withdrawButton;
         private Button _depositButton;
