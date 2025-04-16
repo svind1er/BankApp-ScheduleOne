@@ -52,6 +52,7 @@ namespace BankApp
         { Withdraw, Deposit }
 
         private TabType _currentTab = TabType.Withdraw;
+
         private GameObject _withdrawTab;
         private GameObject _depositTab;
 
@@ -92,7 +93,6 @@ namespace BankApp
                 _appSetupAttempted = true;
                 CreateOrEnsureAppAndIcon();
             }
-
             UpdateBalanceText();
         }
 
@@ -359,7 +359,7 @@ namespace BankApp
 
             UpdateUIForCurrentTab();
 
-            UpdateCofnrmButtonLayout();
+            UpdateConfirmButtonLayout();
         }
 
         private void UpdateUIForCurrentTab()
@@ -509,7 +509,7 @@ namespace BankApp
             _confirmButton = actionBtn.GetComponent<Button>();
             _confirmButton.onClick.AddListener((UnityAction)(() => OnConfirmPressed()));
 
-            UpdateCofnrmButtonLayout();
+            UpdateConfirmButtonLayout();
 
             GameObject maxBtn = CreateActionButton(container, "MAX", new Vector2(0.3f, 0.1f),
                 new Vector2(0.7f, 0.2f), new Color(.6f, .7f, .8f, 1f), 35, -37f, -49.6f);
@@ -537,10 +537,10 @@ namespace BankApp
             _resetButton.transform.localPosition = new Vector2(-122.169f, -320f);
             _resetButton.onClick.AddListener((UnityAction)(() => UpdateSelectedAmount(0)));
 
-            MelonLogger.Msg("bank app working smile?.");
+            MelonLogger.Msg("bank app working smile?");
         }
 
-        private void UpdateCofnrmButtonLayout()
+        private void UpdateConfirmButtonLayout()
         {
             if (_confirmButton == null)
                 return;
@@ -788,7 +788,7 @@ namespace BankApp
                         "Funds deposited to ATM"
                     );
                     moneyManager.ChangeCashBalance(-_selectedAmount, true, true);
-                    Il2CppScheduleOne.Money.ATM.WeeklyDepositSum += _selectedAmount;
+                    ATM.WeeklyDepositSum += _selectedAmount;
                     MelonLogger.Msg($"[DEPOSIT] Successful deposit of ${_selectedAmount:N2}");
                     UpdateSelectedAmount(0);
                     UpdateBalanceText();
@@ -804,24 +804,6 @@ namespace BankApp
                 MelonLogger.Error("[DEPOSIT] MoneyManager instance not found!");
             }
         }
-
-        // needs reworking but somewhat works
-        //private void UpdateDespoitButton()
-        //{
-        //    _weeklyDepositLimit = Il2CppScheduleOne.Money.ATM.WEEKLY_DEPOSIT_LIMIT;
-        //    _weeklyDepositSum = Il2CppScheduleOne.Money.ATM.WeeklyDepositSum;
-
-        //    if (_depositButton == null) return;
-
-        //    bool canDeposit = _selectedAmount > 0 && CanDepositAmount(_selectedAmount, out _) &&
-        //                      NetworkSingleton<MoneyManager>.Instance.cashBalance >= _selectedAmount
-        //
-
-        //    _depositButton.interactable = canDeposit;
-        //    ColorBlock colors = _depositButton.colors;
-        //    colors.normalColor = canDeposit ? Color.green : Color.gray;
-        //    _depositButton.colors = colors;
-        //}
 
         private void UpdateSelectedAmount(int amount)
         {
@@ -855,12 +837,6 @@ namespace BankApp
             }
         }
 
-        private bool CanDepositAmount(float amount, out float availableToDeposit)
-        {
-            availableToDeposit = _weeklyDepositLimit - _weeklyDepositSum;
-            return amount <= availableToDeposit;
-        }
-
         private void UpdateBalanceText()
         {
             MoneyManager moneyManager = NetworkSingleton<MoneyManager>.Instance;
@@ -878,17 +854,17 @@ namespace BankApp
                 }
                 if (_weeklyAmountText != null)
                 {
-                    _weeklyAmountText.text = $"Weekly Limit: ${Il2CppScheduleOne.Money.ATM.WeeklyDepositSum}/${_weeklyDepositLimit}";
+                    _weeklyAmountText.text = $"Weekly Limit: ${ATM.WeeklyDepositSum}/${_weeklyDepositLimit}";
                 }
             }
 
             if (_currentTab == TabType.Deposit)
-                UpdateCofnrmButtonLayout();
+                UpdateConfirmButtonLayout();
         }
 
         private int DepositMax()
         {
-            return _weeklyDepositLimit - (int)Il2CppScheduleOne.Money.ATM.WeeklyDepositSum;
+            return _weeklyDepositLimit - (int)ATM.WeeklyDepositSum;
         }
 
         private Text CreateText(string name, Transform parent, int fontSize, Color color)
