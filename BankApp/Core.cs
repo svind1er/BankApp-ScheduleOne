@@ -32,9 +32,10 @@ namespace BankApp
         private bool _appCreated = false;
         private bool _iconModified = false;
 
-        private float _selectedAmount = 0f;
         private float _weeklyDepositSum = 0f;
         private float _weeklyDepositLimit = 0f;
+        private float _selectedAmount = 0f;
+        private int[] amounts = new int[] { 0, 5, 10, 20, 50, 100, 500, 1000, 5000 };
 
         private Text _onlineBalanceText;
         private Text _cashBalanceText;
@@ -85,6 +86,7 @@ namespace BankApp
                 _appSetupAttempted = true;
                 CreateOrEnsureAppAndIcon();
             }
+
             UpdateBalanceText();
         }
 
@@ -136,6 +138,7 @@ namespace BankApp
                 MelonLogger.Error("AppsCanvas not found.");
                 return;
             }
+
             MelonLogger.Msg("AppsCanvas found.");
 
             Transform existingApp = appsCanvas.transform.Find(APP_OBJECT_NAME);
@@ -147,14 +150,17 @@ namespace BankApp
             }
             else
             {
-                MelonLogger.Msg($"No existing app named '{APP_OBJECT_NAME}' found. Looking for template app '{TEMPLATE_APP_NAME}'.");
+                MelonLogger.Msg(
+                    $"No existing app named '{APP_OBJECT_NAME}' found. Looking for template app '{TEMPLATE_APP_NAME}'.");
 
                 Transform templateApp = appsCanvas.transform.Find(TEMPLATE_APP_NAME);
                 if (templateApp == null)
                 {
-                    MelonLogger.Error($"Cannot create app: Template '{TEMPLATE_APP_NAME}' not found inside AppsCanvas.");
+                    MelonLogger.Error(
+                        $"Cannot create app: Template '{TEMPLATE_APP_NAME}' not found inside AppsCanvas.");
                     return;
                 }
+
                 MelonLogger.Msg($"Template app '{TEMPLATE_APP_NAME}' found. Cloning template.");
 
                 _bankingAppPanel = UnityEngine.Object.Instantiate(templateApp.gameObject, appsCanvas.transform);
@@ -204,6 +210,7 @@ namespace BankApp
                 _appCreated = true;
                 MelonLogger.Msg("App creation flag set to true.");
             }
+
             MelonLogger.Msg("Exiting CreateOrEnsureAppAndIcon.");
         }
 
@@ -337,77 +344,80 @@ namespace BankApp
             bgRt.anchorMax = Vector2.one;
             bgRt.offsetMin = Vector2.zero;
             bgRt.offsetMax = Vector2.zero;
+
+            Texture2D gradientTex = new Texture2D(1, 256);
+            for (int y = 0; y < 256; y++)
+            {
+                float t = y / 255f;
+
+                Color topColor = new Color(0.18f, 0.48f, 0.95f);
+                Color bottomColor = new Color(0.18f, 0.31f, 0.51f);
+
+                Color gradientColor = Color.Lerp(bottomColor, topColor, t);
+                gradientTex.SetPixel(0, y, gradientColor);
+            }
+            gradientTex.Apply();
+
+            Sprite gradientSprite = Sprite.Create(
+                gradientTex,
+                new Rect(0, 0, gradientTex.width, gradientTex.height),
+                new Vector2(0.5f, 0.5f)
+            );
+
             Image bgImage = background.AddComponent<Image>();
-            bgImage.color = new Color(0.1f, 0.1f, 0.2f, 0.95f);
+            bgImage.sprite = gradientSprite;
+            bgImage.type = Image.Type.Simple;
+            bgImage.preserveAspect = false;
 
-            GameObject onlineBalanceObj = new GameObject("OnlineBalance");
-            onlineBalanceObj.transform.SetParent(container.transform, false);
-            RectTransform onlineRt = onlineBalanceObj.AddComponent<RectTransform>();
-            onlineRt.anchorMin = new Vector2(0f, 0.85f);
-            onlineRt.anchorMax = new Vector2(1f, 0.95f);
-            _onlineBalanceText = onlineBalanceObj.AddComponent<Text>();
-            _onlineBalanceText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-            _onlineBalanceText.fontSize = 22;
-            _onlineBalanceText.alignment = TextAnchor.MiddleCenter;
-            _onlineBalanceText.color = Color.white;
+            GameObject infoPanel = new GameObject("InfoPanel");
+            infoPanel.transform.SetParent(container.transform, false);
+            VerticalLayoutGroup infoLayoutGroup = infoPanel.AddComponent<VerticalLayoutGroup>();
+            RectTransform infoRt = infoPanel.GetComponent<RectTransform>();
+            infoRt.anchorMin = new Vector2(0.05f, 0.75f);
+            infoRt.anchorMax = new Vector2(0.95f, 0.98f);
+            infoRt.offsetMin = Vector2.zero;
+            infoRt.offsetMax = Vector2.zero;
+            infoLayoutGroup.spacing = 5;
+            infoLayoutGroup.childAlignment = TextAnchor.MiddleCenter;
 
-            GameObject cashBalanceObj = new GameObject("CashBalance");
-            cashBalanceObj.transform.SetParent(container.transform, false);
-            RectTransform cashRt = cashBalanceObj.AddComponent<RectTransform>();
-            cashRt.anchorMin = new Vector2(0f, 0.75f);
-            cashRt.anchorMax = new Vector2(1f, 0.85f);
-            _cashBalanceText = cashBalanceObj.AddComponent<Text>();
-            _cashBalanceText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-            _cashBalanceText.fontSize = 22;
-            _cashBalanceText.alignment = TextAnchor.MiddleCenter;
-            _cashBalanceText.color = Color.white;
-
-            GameObject weeklyLimitObj = new GameObject("WeeklyDepositLimit");
-            weeklyLimitObj.transform.SetParent(container.transform, false);
-            RectTransform limitRt = weeklyLimitObj.AddComponent<RectTransform>();
-            limitRt.anchorMin = new Vector2(0f, 0.75f);
-            limitRt.anchorMax = new Vector2(1f, 0.85f);
-            _weeklyAmountText = weeklyLimitObj.AddComponent<Text>();
-            _weeklyAmountText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-            _weeklyAmountText.fontSize = 22;
-            _weeklyAmountText.alignment = TextAnchor.MiddleCenter;
-            _weeklyAmountText.color = Color.white;
-
-            GameObject selectedAmountObj = new GameObject("SelectedAmountText");
-            selectedAmountObj.transform.SetParent(container.transform, false);
-            RectTransform selectedRt = selectedAmountObj.AddComponent<RectTransform>();
-            selectedRt.anchorMin = new Vector2(0f, 0.68f);
-            selectedRt.anchorMax = new Vector2(1f, 0.74f);
-            _selectedAmountText = selectedAmountObj.AddComponent<Text>();
+            _weeklyAmountText = CreateText("WeeklyLimit", infoPanel.transform, 34, Color.white);
+            _onlineBalanceText = CreateText("OnlineBalance", infoPanel.transform, 33, Color.cyan);
+            _cashBalanceText = CreateText("CashBalance", infoPanel.transform, 33, Color.green);
+            _selectedAmountText = CreateText("SelectedAmount", infoPanel.transform, 33, Color.yellow);
             _selectedAmountText.text = "Selected: $0.00";
-            _selectedAmountText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-            _selectedAmountText.fontSize = 22;
-            _selectedAmountText.alignment = TextAnchor.MiddleCenter;
-            _selectedAmountText.color = Color.yellow;
 
             GameObject buttonGrid = new GameObject("AmountButtons");
             buttonGrid.transform.SetParent(container.transform, false);
             RectTransform gridRt = buttonGrid.AddComponent<RectTransform>();
-            gridRt.anchorMin = new Vector2(0.1f, 0.3f);
-            gridRt.anchorMax = new Vector2(0.9f, 0.68f);
+            buttonGrid.transform.localPosition = new Vector2(249f, -250f);
+            buttonGrid.transform.localScale = new Vector2(1.4f, 1.4f);
+            gridRt.anchorMin = new Vector2(0.05f, 0.25f);
+            gridRt.anchorMax = new Vector2(0.95f, 0.74f);
             GridLayoutGroup grid = buttonGrid.AddComponent<GridLayoutGroup>();
-            grid.cellSize = new Vector2(180f, 60f);
-            grid.spacing = new Vector2(10f, 10f);
+            grid.cellSize = new Vector2(160f, 50f);
+            grid.spacing = new Vector2(15f, 15f);
             grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
             grid.constraintCount = 2;
 
-            int[] amounts = new int[] { 0, 5, 10, 20, 50, 100, 500, 1000, 5000 };
             foreach (int amt in amounts)
             {
                 GameObject btnObj = new GameObject($"Amount_{amt}");
                 btnObj.transform.SetParent(buttonGrid.transform, false);
                 RectTransform btnRt = btnObj.AddComponent<RectTransform>();
-                btnRt.sizeDelta = new Vector2(180f, 60f);
+                btnRt.sizeDelta = new Vector2(160f, 50f);
 
                 Image img = btnObj.AddComponent<Image>();
-                img.color = new Color(0.85f, 0.85f, 0.85f, 1f);
+                img.color = new Color(0.8f, 0.85f, 0.9f, 1f);
 
                 Button btn = btnObj.AddComponent<Button>();
+                btn.targetGraphic = img;
+                btn.transition = Selectable.Transition.ColorTint;
+                ColorBlock cb = btn.colors;
+                cb.normalColor = img.color;
+                cb.highlightedColor = new Color(1f, 1f, 1f, 1f);
+                cb.pressedColor = new Color(.6f, .7f, .8f, 1f);
+                cb.disabledColor = Color.gray;
+                btn.colors = cb;
 
                 GameObject textGO = new GameObject("Text");
                 textGO.transform.SetParent(btnObj.transform, false);
@@ -422,19 +432,20 @@ namespace BankApp
                 btnText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
                 btnText.alignment = TextAnchor.MiddleCenter;
                 btnText.color = Color.black;
-
+                btnText.fontSize = 20;
                 AddAmountButtonListener(btn, amt);
             }
 
-            GameObject withdrawBtn = CreateActionButton(container, "Withdraw", new Vector2(0.1f, 0.1f),
-                new Vector2(0.45f, 0.2f), Color.red);
+            GameObject withdrawBtn = CreateActionButton(container, "Withdraw", new Vector2(0.05f, 0.05f),
+                new Vector2(0.45f, 0.15f), new Color(0.8f, .1f, .1f));
             _withdrawButton = withdrawBtn.GetComponent<Button>();
             _withdrawButton.onClick.AddListener((UnityAction)(() => OnWithdrawPressed()));
 
-            GameObject depositBtn = CreateActionButton(container, "Deposit", new Vector2(0.55f, 0.1f),
-                new Vector2(0.9f, 0.2f), Color.green);
+            GameObject depositBtn = CreateActionButton(container, "Deposit", new Vector2(0.55f, 0.05f),
+                new Vector2(0.95f, 0.15f), new Color(.1f, .8f, .1f));
             _depositButton = depositBtn.GetComponent<Button>();
             _depositButton.onClick.AddListener((UnityAction)(() => OnDepositPressed()));
+            // UpdateDespoitButton();
 
             MelonLogger.Msg("bank app working smile?.");
         }
@@ -525,7 +536,9 @@ namespace BankApp
             btnText.text = label;
             btnText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
             btnText.alignment = TextAnchor.MiddleCenter;
-            btnText.color = Color.black;
+            btnText.color = Color.white;
+            btnText.fontSize = 35;
+            btnText.fontStyle = FontStyle.Bold;
 
             return btnObj;
         }
@@ -565,7 +578,7 @@ namespace BankApp
                         -_selectedAmount,
                         1f,
                         "Funds withdrawn from ATM"
-                        );
+                    );
 
                     moneyManager.ChangeCashBalance(_selectedAmount, true, true);
                     MelonLogger.Msg($"[WITHDRAW] Successful withdrawal for ${_selectedAmount:N2}");
@@ -575,7 +588,8 @@ namespace BankApp
                 }
                 else
                 {
-                    MelonLogger.Msg($"[WITHDRAW] Insufficient funds smile. Online Balance: ${moneyManager.onlineBalance:N2}, Attempted: ${_selectedAmount:N2}");
+                    MelonLogger.Msg(
+                        $"[WITHDRAW] Insufficient funds smile. Online Balance: ${moneyManager.onlineBalance:N2}, Attempted: ${_selectedAmount:N2}");
                 }
             }
             else
@@ -586,13 +600,20 @@ namespace BankApp
 
         private void OnDepositPressed()
         {
+            MoneyManager moneyManager = NetworkSingleton<MoneyManager>.Instance;
+
             if (_selectedAmount <= 0)
             {
                 MelonLogger.Msg("[DEPOSIT] Cannot deposit zero :dentgE:.");
                 return;
             }
 
-            MoneyManager moneyManager = NetworkSingleton<MoneyManager>.Instance;
+            if (!CanDepositAmount(_selectedAmount, out float availableToDeposit))
+            {
+                MelonLogger.Msg($"[DEPOSIT] Weekly deposit limit exceeded. You can only deposit ${availableToDeposit:N2} more.");
+                return;
+            }
+
             if (moneyManager != null)
             {
                 if (moneyManager.cashBalance >= _selectedAmount)
@@ -603,7 +624,6 @@ namespace BankApp
                         1f,
                         "Funds deposited to ATM"
                     );
-
                     moneyManager.ChangeCashBalance(-_selectedAmount, true, true);
                     MelonLogger.Msg($"[DEPOSIT] Successful deposit of ${_selectedAmount:N2}");
                     UpdateSelectedAmount(0);
@@ -611,7 +631,8 @@ namespace BankApp
                 }
                 else
                 {
-                    MelonLogger.Msg($"[DEPOSIT] Insufficient cash smile. Cash Balance: ${moneyManager.cashBalance:N2}, Attempted: ${_selectedAmount:N2}");
+                    MelonLogger.Msg(
+                        $"[DEPOSIT] Insufficient cash smile. Cash Balance: ${moneyManager.cashBalance:N2}, Attempted: ${_selectedAmount:N2}");
                 }
             }
             else
@@ -619,6 +640,24 @@ namespace BankApp
                 MelonLogger.Error("[DEPOSIT] MoneyManager instance not found!");
             }
         }
+
+        // needs reworking but somewhat works
+        //private void UpdateDespoitButton()
+        //{
+        //    _weeklyDepositLimit = Il2CppScheduleOne.Money.ATM.WEEKLY_DEPOSIT_LIMIT;
+        //    _weeklyDepositSum = Il2CppScheduleOne.Money.ATM.WeeklyDepositSum;
+
+        //    if (_depositButton == null) return;
+
+        //    bool canDeposit = _selectedAmount > 0 && CanDepositAmount(_selectedAmount, out _) &&
+        //                      NetworkSingleton<MoneyManager>.Instance.cashBalance >= _selectedAmount
+        //                      || _weeklyDepositSum == _weeklyDepositLimit;
+
+        //    _depositButton.interactable = canDeposit;
+        //    ColorBlock colors = _depositButton.colors;
+        //    colors.normalColor = canDeposit ? Color.green : Color.gray;
+        //    _depositButton.colors = colors;
+        //}
 
         private void UpdateSelectedAmount(int amount)
         {
@@ -629,6 +668,7 @@ namespace BankApp
             else
             {
                 _selectedAmount += amount;
+                // UpdateDespoitButton();
             }
 
             if (_selectedAmountText != null)
@@ -637,11 +677,18 @@ namespace BankApp
             }
         }
 
+        private bool CanDepositAmount(float amount, out float availableToDeposit)
+        {
+            availableToDeposit = _weeklyDepositLimit - _weeklyDepositSum;
+            return amount <= availableToDeposit;
+        }
+
         private void UpdateBalanceText()
         {
-            MoneyManager moneyManager = NetworkSingleton<MoneyManager>.Instance;
-            _weeklyDepositSum = Il2CppScheduleOne.Money.ATM.WeeklyDepositSum;
             _weeklyDepositLimit = Il2CppScheduleOne.Money.ATM.WEEKLY_DEPOSIT_LIMIT;
+            _weeklyDepositSum = Il2CppScheduleOne.Money.ATM.WeeklyDepositSum;
+
+            MoneyManager moneyManager = NetworkSingleton<MoneyManager>.Instance;
 
             if (moneyManager != null)
             {
@@ -659,6 +706,24 @@ namespace BankApp
                     _weeklyAmountText.text = $"Weekly Limit: ${_weeklyDepositSum}/${_weeklyDepositLimit}";
                 }
             }
+        }
+
+        private Text CreateText(string name, Transform parent, int fontSize, Color color)
+        {
+            GameObject textObj = new GameObject(name);
+            textObj.transform.SetParent(parent, false);
+            RectTransform rt = textObj.AddComponent<RectTransform>();
+            rt.anchorMin = new Vector2(0, 0);
+            rt.anchorMax = new Vector2(1, 1);
+            rt.offsetMin = Vector2.zero;
+            rt.offsetMax = Vector2.zero;
+
+            Text text = textObj.AddComponent<Text>();
+            text.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            text.fontSize = fontSize;
+            text.color = color;
+            text.alignment = TextAnchor.MiddleCenter;
+            return text;
         }
 
         public override void OnApplicationQuit()
