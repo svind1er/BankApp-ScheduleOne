@@ -2,17 +2,12 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
-using System.IO;
 using System.Reflection;
-using System;
-using Il2CppFluffyUnderware.DevTools.Extensions;
 using UnityEngine.Networking;
 using Il2CppInterop.Runtime.Injection;
 using Il2CppScheduleOne.DevUtilities;
 using Il2CppScheduleOne.Money;
-using Il2CppSystem.Linq.Expressions;
 using UnityEngine.Events;
-using UnityEngine.PlayerLoop;
 
 [assembly: MelonInfo(typeof(BankApp.Core), "BankApp", "1.0.0", "svindler, Lalisa", null)]
 [assembly: MelonGame("TVGS", "Schedule I")]
@@ -32,10 +27,11 @@ namespace BankApp
         private bool _appCreated = false;
         private bool _iconModified = false;
 
-        private float _weeklyDepositSum = 0f;
-        private float _weeklyDepositLimit = 0f;
         private float _selectedAmount = 0f;
-        private int[] amounts = new int[] { 0, 5, 10, 20, 50, 100, 500, 1000, 5000 };
+        private int[] amounts = new int[] { 1, 5, 10, 25, 50, 100, 500, 1000 };
+        private int _weeklyDepositLimit = 10000;
+        private int _maxDeposit;
+        private int _weeklyDepositSum = 0;
 
         private Text _onlineBalanceText;
         private Text _cashBalanceText;
@@ -48,6 +44,8 @@ namespace BankApp
 
         private Button _withdrawButton;
         private Button _depositButton;
+        private Button _resetButton;
+        private Button _maxButton;
 
         public override void OnInitializeMelon()
         {
@@ -431,21 +429,30 @@ namespace BankApp
                 btnText.text = $"${amt}";
                 btnText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
                 btnText.alignment = TextAnchor.MiddleCenter;
-                btnText.color = Color.black;
+                btnText.color = Color.white;
                 btnText.fontSize = 20;
                 AddAmountButtonListener(btn, amt);
             }
 
             GameObject withdrawBtn = CreateActionButton(container, "Withdraw", new Vector2(0.05f, 0.05f),
-                new Vector2(0.45f, 0.15f), new Color(0.8f, .1f, .1f));
+                new Vector2(0.45f, 0.15f), new Color(0.8f, .1f, .1f), 35, 1f, 1f);
             _withdrawButton = withdrawBtn.GetComponent<Button>();
             _withdrawButton.onClick.AddListener((UnityAction)(() => OnWithdrawPressed()));
 
             GameObject depositBtn = CreateActionButton(container, "Deposit", new Vector2(0.55f, 0.05f),
-                new Vector2(0.95f, 0.15f), new Color(.1f, .8f, .1f));
+                new Vector2(0.95f, 0.15f), new Color(.1f, .8f, .1f), 35, 1f, 1f);
             _depositButton = depositBtn.GetComponent<Button>();
             _depositButton.onClick.AddListener((UnityAction)(() => OnDepositPressed()));
-            // UpdateDespoitButton();
+
+            GameObject resetbtn = CreateActionButton(container, "Clear", new Vector2(0.3f, 0.1f), new Vector2(0.7f, 0.2f), new Color(.6f, .7f, .8f, 1f), 35, -37f, -49.6f);
+            _resetButton = resetbtn.GetComponent<Button>();
+            _resetButton.transform.localPosition = new Vector2(-122.169f, -171.375f);
+            _resetButton.onClick.AddListener((UnityAction)(() => UpdateSelectedAmount(0)));
+
+            GameObject maxBtn = CreateActionButton(container, $"MAX", new Vector2(0.3f, 0.1f), new Vector2(0.7f, 0.2f), new Color(.6f, .7f, .8f, 1f), 35, -37f, -49.6f);
+            _maxButton = maxBtn.GetComponent<Button>();
+            _maxButton.transform.localPosition = new Vector2(124.269f, -171.375f);
+            _maxButton.onClick.AddListener((UnityAction)(() => UpdateSelectedAmount(DepositMax())));
 
             MelonLogger.Msg("bank app working smile?.");
         }
@@ -508,8 +515,7 @@ namespace BankApp
             }
         }
 
-        private GameObject CreateActionButton(GameObject parent, string label, Vector2 anchorMin, Vector2 anchorMax,
-            Color color)
+        private GameObject CreateActionButton(GameObject parent, string label, Vector2 anchorMin, Vector2 anchorMax, Color color, int fontSize, float buttonLength, float buttonWidth)
         {
             GameObject btnObj = new GameObject($"{label}Button");
             btnObj.transform.SetParent(parent.transform, false);
@@ -518,6 +524,8 @@ namespace BankApp
             rt.anchorMax = anchorMax;
             rt.offsetMin = Vector2.zero;
             rt.offsetMax = Vector2.zero;
+
+            rt.sizeDelta = new Vector2(buttonLength, buttonWidth);
 
             Image img = btnObj.AddComponent<Image>();
             img.color = color;
@@ -537,7 +545,7 @@ namespace BankApp
             btnText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
             btnText.alignment = TextAnchor.MiddleCenter;
             btnText.color = Color.white;
-            btnText.fontSize = 35;
+            btnText.fontSize = fontSize;
             btnText.fontStyle = FontStyle.Bold;
 
             return btnObj;
@@ -608,12 +616,6 @@ namespace BankApp
                 return;
             }
 
-            if (!CanDepositAmount(_selectedAmount, out float availableToDeposit))
-            {
-                MelonLogger.Msg($"[DEPOSIT] Weekly deposit limit exceeded. You can only deposit ${availableToDeposit:N2} more.");
-                return;
-            }
-
             if (moneyManager != null)
             {
                 if (moneyManager.cashBalance >= _selectedAmount)
@@ -625,6 +627,7 @@ namespace BankApp
                         "Funds deposited to ATM"
                     );
                     moneyManager.ChangeCashBalance(-_selectedAmount, true, true);
+                    Il2CppScheduleOne.Money.ATM.WeeklyDepositSum += _selectedAmount;
                     MelonLogger.Msg($"[DEPOSIT] Successful deposit of ${_selectedAmount:N2}");
                     UpdateSelectedAmount(0);
                     UpdateBalanceText();
@@ -651,7 +654,7 @@ namespace BankApp
 
         //    bool canDeposit = _selectedAmount > 0 && CanDepositAmount(_selectedAmount, out _) &&
         //                      NetworkSingleton<MoneyManager>.Instance.cashBalance >= _selectedAmount
-        //                      || _weeklyDepositSum == _weeklyDepositLimit;
+        //
 
         //    _depositButton.interactable = canDeposit;
         //    ColorBlock colors = _depositButton.colors;
@@ -685,9 +688,6 @@ namespace BankApp
 
         private void UpdateBalanceText()
         {
-            _weeklyDepositLimit = Il2CppScheduleOne.Money.ATM.WEEKLY_DEPOSIT_LIMIT;
-            _weeklyDepositSum = Il2CppScheduleOne.Money.ATM.WeeklyDepositSum;
-
             MoneyManager moneyManager = NetworkSingleton<MoneyManager>.Instance;
 
             if (moneyManager != null)
@@ -703,9 +703,14 @@ namespace BankApp
                 }
                 if (_weeklyAmountText != null)
                 {
-                    _weeklyAmountText.text = $"Weekly Limit: ${_weeklyDepositSum}/${_weeklyDepositLimit}";
+                    _weeklyAmountText.text = $"Weekly Limit: ${Il2CppScheduleOne.Money.ATM.WeeklyDepositSum}/${_weeklyDepositLimit}";
                 }
             }
+        }
+
+        private int DepositMax()
+        {
+            return _weeklyDepositLimit - (int)Il2CppScheduleOne.Money.ATM.WeeklyDepositSum;
         }
 
         private Text CreateText(string name, Transform parent, int fontSize, Color color)
@@ -723,6 +728,7 @@ namespace BankApp
             text.fontSize = fontSize;
             text.color = color;
             text.alignment = TextAnchor.MiddleCenter;
+            text.fontStyle = FontStyle.Bold;
             return text;
         }
 
