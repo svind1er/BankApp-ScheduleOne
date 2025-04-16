@@ -509,19 +509,34 @@ namespace BankApp
 
             UpdateCofnrmButtonLayout();
 
+            GameObject maxBtn = CreateActionButton(container, "MAX", new Vector2(0.3f, 0.1f),
+                new Vector2(0.7f, 0.2f), new Color(.6f, .7f, .8f, 1f), 35, -37f, -49.6f);
+            _maxButton = maxBtn.GetComponent<Button>();
+            _maxButton.transform.localPosition = new Vector2(124.269f, -320f);
+            _maxButton.onClick.RemoveAllListeners();
+            _maxButton.onClick.AddListener((UnityAction)(() =>
+            {
+                MoneyManager moneyManager = NetworkSingleton<MoneyManager>.Instance;
+                if (_currentTab == TabType.Withdraw)
+                {
+                    if (moneyManager != null)
+                    {
+                        SetSelectedAmount((int)moneyManager.onlineBalance);
+                    }
+                }
+                else
+                {
+                    SetSelectedAmount(DepositMax());
+                }
+            }));
+
             GameObject resetbtn = CreateActionButton(container, "Clear", new Vector2(0.3f, 0.1f), new Vector2(0.7f, 0.2f), new Color(.6f, .7f, .8f, 1f), 35, -37f, -49.6f);
             _resetButton = resetbtn.GetComponent<Button>();
             _resetButton.transform.localPosition = new Vector2(-122.169f, -320f);
             _resetButton.onClick.AddListener((UnityAction)(() => UpdateSelectedAmount(0)));
 
-            GameObject maxBtn = CreateActionButton(container, $"MAX", new Vector2(0.3f, 0.1f), new Vector2(0.7f, 0.2f), new Color(.6f, .7f, .8f, 1f), 35, -37f, -49.6f);
-            _maxButton = maxBtn.GetComponent<Button>();
-            _maxButton.transform.localPosition = new Vector2(124.269f, -320f);
-            _maxButton.onClick.AddListener((UnityAction)(() => UpdateSelectedAmount(DepositMax())));
-
             MelonLogger.Msg("bank app working smile?.");
         }
-
 
         private void UpdateCofnrmButtonLayout()
         {
@@ -533,11 +548,21 @@ namespace BankApp
             {
                 btnText.text = "Withdraw";
                 _confirmButton.GetComponent<Image>().color = new Color(0.8f, 0.3f, 0.3f, 1f);
+                _confirmButton.interactable = true;
             }
             else
             {
                 btnText.text = "Deposit";
-                _confirmButton.GetComponent<Image>().color = new Color(0.3f, 0.8f, 0.3f, 1f);
+                if (DepositMax() <= 0)
+                {
+                    _confirmButton.GetComponent<Image>().color = new Color(0.5f, 0.5f, 0.5f, 1f);
+                    _confirmButton.interactable = false;
+                }
+                else
+                {
+                    _confirmButton.GetComponent<Image>().color = new Color(0.3f, 0.8f, 0.3f, 1f);
+                    _confirmButton.interactable = true;
+                }
             }
         }
 
@@ -805,9 +830,20 @@ namespace BankApp
             else
             {
                 _selectedAmount += amount;
-                // UpdateDespoitButton();
             }
 
+            if (_selectedAmountText != null)
+            {
+                if (_currentTab == TabType.Withdraw)
+                    _selectedAmountText.text = $"Withdraw: ${_selectedAmount:N2}";
+                else
+                    _selectedAmountText.text = $"Deposit: ${_selectedAmount:N2}";
+            }
+        }
+
+        private void SetSelectedAmount(int amount)
+        {
+            _selectedAmount = amount;
             if (_selectedAmountText != null)
             {
                 if (_currentTab == TabType.Withdraw)
@@ -843,6 +879,9 @@ namespace BankApp
                     _weeklyAmountText.text = $"Weekly Limit: ${Il2CppScheduleOne.Money.ATM.WeeklyDepositSum}/${_weeklyDepositLimit}";
                 }
             }
+
+            if (_currentTab == TabType.Deposit)
+                UpdateCofnrmButtonLayout();
         }
 
         private int DepositMax()
