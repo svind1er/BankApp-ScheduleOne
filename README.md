@@ -19,13 +19,15 @@ This mod introduces a **fully functional banking app** that brings the power of 
   - A version built specifically for Mono is in the works — stay tuned for updates!
 - 🖼️ **Overhauled App UI**
   - We are currently working on overhauling the UI.
----
-
-### 📦 Installation
+  
+## 📦 Installation
 
 1. Download the latest release of the mod.
 2. Install MelonLoader https://melonwiki.xyz/#/
 3. Unzip and drop "BankApp.dll" into mods folder.
 4. Launch the game and enjoy mobile banking convenience!
 
+## Mod Pages
+### [Thunderstore](https://thunderstore.io/c/schedule-i/p/dentge/BankApp/)
+### [Nexus Mods](https://www.nexusmods.com/schedule1/mods/678)
 ---
