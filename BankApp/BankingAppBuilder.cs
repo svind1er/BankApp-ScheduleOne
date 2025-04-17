@@ -20,6 +20,7 @@ namespace BankApp
         private readonly Action _onWithdrawTab;
 
         public Text WeeklyAmountText { get; private set; }
+        public RectTransform WeeklyProgressFill { get; private set; }
         public Text OnlineBalanceText { get; private set; }
         public Text CashBalanceText { get; private set; }
         public Text SelectedAmountText { get; private set; }
@@ -100,26 +101,35 @@ namespace BankApp
             progressText.alignment = TextAnchor.MiddleLeft;
 
             var progressAmount = CreateText("ProgressAmount", progressGO.transform, 16, new Color32(209, 213, 219, 255));
-            progressAmount.text = $"${ATM.WeeklyDepositSum} / ${ATM.WEEKLY_DEPOSIT_LIMIT}"; // ts needs to be updated on deposit and all that, it dont work
+            progressAmount.text = $"${ATM.WeeklyDepositSum} / ${ATM.WEEKLY_DEPOSIT_LIMIT}";
             progressAmount.alignment = TextAnchor.MiddleRight;
+            WeeklyAmountText = progressAmount;
 
-            // i just copypasted and changed name n moved it around iunno but ts does NOT work
             var progressBarGO = new GameObject("ProgressBar");
             progressBarGO.transform.SetParent(headerGO.transform, false);
-            var progressBarRT = progressBarGO.AddComponent<RectTransform>();
-            progressBarRT.sizeDelta = new Vector2(0, 8);
+            var barLayout = progressBarGO.AddComponent<LayoutElement>();
+            barLayout.minHeight = 8;
+            barLayout.preferredHeight = 8;
+
+            Sprite defaultSprite = Resources.GetBuiltinResource<Sprite>("UI/Skin/UISprite.psd");
 
             var progressBarBg = progressBarGO.AddComponent<Image>();
+            progressBarBg.sprite = defaultSprite;
+            progressBarBg.type = Image.Type.Sliced;
             progressBarBg.color = new Color32(31, 41, 55, 255);
 
             var progressBarFillGO = new GameObject("ProgressFill");
             progressBarFillGO.transform.SetParent(progressBarGO.transform, false);
             var progressBarFillRT = progressBarFillGO.AddComponent<RectTransform>();
             progressBarFillRT.anchorMin = Vector2.zero;
-            progressBarFillRT.anchorMax = new Vector2(0.37f, 1);
+            float initRatio = Mathf.Clamp01(ATM.WeeklyDepositSum / (float)ATM.WEEKLY_DEPOSIT_LIMIT);
+            progressBarFillRT.anchorMax = new Vector2(initRatio, 1);
             progressBarFillRT.offsetMin = progressBarFillRT.offsetMax = Vector2.zero;
+            WeeklyProgressFill = progressBarFillRT;
 
             var progressBarFill = progressBarFillGO.AddComponent<Image>();
+            progressBarFill.sprite = defaultSprite;
+            progressBarFill.type = Image.Type.Simple;
             progressBarFill.color = new Color32(59, 130, 246, 255);
 
             var balanceGO = new GameObject("Balance");

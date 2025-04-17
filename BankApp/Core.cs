@@ -35,6 +35,7 @@ namespace BankApp
         private Text _cashBalanceText;
         private Text _selectedAmountText;
         private Text _weeklyAmountText;
+        private RectTransform _weeklyProgressFill;
 
         private const string TEMPLATE_APP_NAME = "Messages";
         private const string APP_OBJECT_NAME = "BankingApp";
@@ -46,10 +47,10 @@ namespace BankApp
         private GameObject _withdrawTab;
         private GameObject _depositTab;
 
-        private enum TabType
-        { Withdraw, Deposit }
-
+        private enum TabType { Withdraw, Deposit }
         private TabType _currentTab = TabType.Deposit;
+
+        private float _lastProgressRatio = 0f;
 
         public override void OnInitializeMelon()
         {
@@ -181,6 +182,10 @@ namespace BankApp
                     builder.BuildUI();
 
                     _weeklyAmountText = builder.WeeklyAmountText;
+                    _weeklyProgressFill = builder.WeeklyProgressFill;
+                    if (_weeklyProgressFill != null)
+                        _lastProgressRatio = _weeklyProgressFill.anchorMax.x;
+
                     _onlineBalanceText = builder.OnlineBalanceText;
                     _cashBalanceText = builder.CashBalanceText;
                     _selectedAmountText = builder.SelectedAmountText;
@@ -296,6 +301,10 @@ namespace BankApp
                 builder.BuildUI();
 
                 _weeklyAmountText = builder.WeeklyAmountText;
+                _weeklyProgressFill = builder.WeeklyProgressFill;
+                if (_weeklyProgressFill != null)
+                    _lastProgressRatio = _weeklyProgressFill.anchorMax.x;
+
                 _onlineBalanceText = builder.OnlineBalanceText;
                 _cashBalanceText = builder.CashBalanceText;
                 _selectedAmountText = builder.SelectedAmountText;
@@ -465,10 +474,7 @@ namespace BankApp
             _selectedAmount = (amt == 0) ? 0f : _selectedAmount + amt;
             if (_selectedAmountText != null)
             {
-                if (_currentTab == TabType.Withdraw)
-                    _selectedAmountText.text = $"${_selectedAmount:N0}";
-                else
-                    _selectedAmountText.text = $"${_selectedAmount:N0}";
+                _selectedAmountText.text = $"${_selectedAmount:N0}";
             }
         }
 
@@ -477,10 +483,7 @@ namespace BankApp
             _selectedAmount = amt;
             if (_selectedAmountText != null)
             {
-                if (_currentTab == TabType.Withdraw)
-                    _selectedAmountText.text = $"${_selectedAmount:N0}";
-                else
-                    _selectedAmountText.text = $"${_selectedAmount:N0}";
+                _selectedAmountText.text = $"${_selectedAmount:N0}";
             }
         }
 
@@ -494,7 +497,31 @@ namespace BankApp
                 _cashBalanceText.text = $"${mm.cashBalance:N0}";
             if (_weeklyAmountText != null)
                 _weeklyAmountText.text = $"Weekly: ${ATM.WeeklyDepositSum}/{_weeklyDepositLimit}";
-            if (_currentTab == TabType.Deposit) UpdateConfirmButtonLayout();
+
+            if (_weeklyProgressFill != null)
+            {
+                float targetRatio = Mathf.Clamp01(ATM.WeeklyDepositSum / (float)_weeklyDepositLimit);
+                float currentRatio = _weeklyProgressFill.anchorMax.x;
+                if (Mathf.Abs(targetRatio - currentRatio) > 0.001f)
+                    MelonLoader.MelonCoroutines.Start(AnimateProgressBar(currentRatio, targetRatio, 0.5f));
+            }
+
+            if (_currentTab == TabType.Deposit)
+                UpdateConfirmButtonLayout();
+        }
+
+        private IEnumerator AnimateProgressBar(float from, float to, float duration)
+        {
+            float elapsed = 0f;
+            while (elapsed < duration)
+            {
+                float t = elapsed / duration;
+                float v = Mathf.Lerp(from, to, t);
+                _weeklyProgressFill.anchorMax = new Vector2(v, 1f);
+                elapsed += Time.deltaTime;
+                yield return null;
+            }
+            _weeklyProgressFill.anchorMax = new Vector2(to, 1f);
         }
 
         private int DepositMax() => _weeklyDepositLimit - (int)ATM.WeeklyDepositSum;
@@ -503,10 +530,7 @@ namespace BankApp
     [RegisterTypeInIl2Cpp]
     public class BankingAppComponent : MonoBehaviour
     {
-        public BankingAppComponent(IntPtr ptr) : base(ptr)
-        {
-        }
-
+        public BankingAppComponent(IntPtr ptr) : base(ptr) { }
         public void Start() => MelonLogger.Msg("BankingAppComponent: Starting");
     }
 }
