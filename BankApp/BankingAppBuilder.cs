@@ -250,9 +250,10 @@ namespace BankApp
                 btn.targetGraphic = btnImg;
 
                 var colors = btn.colors;
-                colors.normalColor = btnImg.color;
-                colors.highlightedColor = new Color32(56, 66, 82, 255);
-                colors.pressedColor = new Color32(20, 31, 46, 255);
+                colors.normalColor = new Color32(31, 41, 55, 255);
+                colors.highlightedColor = new Color32(55, 65, 81, 255);
+                colors.pressedColor = new Color32(20, 24, 29, 255);
+                colors.selectedColor = colors.normalColor;
                 btn.colors = colors;
 
                 var btnText = CreateText("Text", btnGO.transform, 16, Color.white);
@@ -285,9 +286,10 @@ namespace BankApp
             ResetButton = clearGO.AddComponent<Button>();
             ResetButton.targetGraphic = clearImg;
             var clearColors = ResetButton.colors;
-            clearColors.normalColor = clearImg.color;
-            clearColors.highlightedColor = new Color32(56, 66, 82, 255);
-            clearColors.pressedColor = new Color32(20, 31, 46, 255);
+            clearColors.normalColor = new Color32(31, 41, 55, 255);
+            clearColors.highlightedColor = new Color32(55, 65, 81, 255);
+            clearColors.pressedColor = new Color32(20, 24, 29, 255);
+            clearColors.selectedColor = clearColors.normalColor;
             ResetButton.colors = clearColors;
 
             var clearText = CreateText("Text", clearGO.transform, 16, Color.white);
@@ -304,9 +306,10 @@ namespace BankApp
             MaxButton = maxGO.AddComponent<Button>();
             MaxButton.targetGraphic = maxImg;
             var maxColors = MaxButton.colors;
-            maxColors.normalColor = maxImg.color;
-            maxColors.highlightedColor = new Color32(56, 66, 82, 255);
-            maxColors.pressedColor = new Color32(20, 31, 46, 255);
+            maxColors.normalColor = new Color32(31, 41, 55, 255);
+            maxColors.highlightedColor = new Color32(55, 65, 81, 255);
+            maxColors.pressedColor = new Color32(20, 24, 29, 255);
+            maxColors.selectedColor = maxColors.normalColor;
             MaxButton.colors = maxColors;
 
             var maxText = CreateText("Text", maxGO.transform, 16, Color.white);
@@ -328,9 +331,10 @@ namespace BankApp
             ConfirmButton = confirmGO.AddComponent<Button>();
             ConfirmButton.targetGraphic = confirmImg;
             var confirmColors = ConfirmButton.colors;
-            confirmColors.normalColor = confirmImg.color;
-            confirmColors.highlightedColor = new Color32(5, 120, 87, 255);
+            confirmColors.normalColor = new Color32(5, 150, 105, 255);
+            confirmColors.highlightedColor = new Color32(4, 120, 87, 255);
             confirmColors.pressedColor = new Color32(3, 89, 64, 255);
+            confirmColors.selectedColor = confirmColors.normalColor;
             ConfirmButton.colors = confirmColors;
 
             var confirmText = CreateText("Text", confirmGO.transform, 18, Color.white);
@@ -361,10 +365,10 @@ namespace BankApp
             colors.normalColor = img.color;
             colors.highlightedColor = active ?
                 new Color32(14, 116, 144, 255) :
-                new Color32(49, 64, 84, 255);
+                new Color32(55, 65, 81, 255);
             colors.pressedColor = active ?
-                new Color32(8, 102, 128, 255) :
-                new Color32(31, 41, 55, 255);
+                new Color32(7, 89, 110, 255) :
+                new Color32(20, 24, 29, 255);
             colors.selectedColor = colors.normalColor;
             btn.colors = colors;
             btn.targetGraphic = img;

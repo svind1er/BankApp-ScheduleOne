@@ -325,17 +325,43 @@ namespace BankApp
             var wImg = _withdrawTab.GetComponent<Image>();
             var dImg = _depositTab.GetComponent<Image>();
             wImg.color = (tab == TabType.Withdraw)
-                ? new Color32(51, 102, 204, 255)
-                : new Color32(127, 127, 127, 255);
+                ? new Color32(8, 145, 178, 255)
+                : new Color32(31, 41, 55, 255);
 
             dImg.color = (tab == TabType.Deposit)
-                ? new Color32(51, 102, 204, 255)
-                : new Color32(127, 127, 127, 255);
+                ? new Color32(8, 145, 178, 255)
+                : new Color32(31, 41, 55, 255);
 
             var wBtn = _withdrawTab.GetComponent<Button>();
             var dBtn = _depositTab.GetComponent<Button>();
-            var wc = wBtn.colors; wc.normalColor = wImg.color; wBtn.colors = wc;
-            var dc = dBtn.colors; dc.normalColor = dImg.color; dBtn.colors = dc;
+
+            var wc = wBtn.colors;
+            wc.normalColor = wImg.color;
+            wc.highlightedColor = tab == TabType.Withdraw
+                ? new Color32(14, 116, 144, 255)
+                : new Color32(55, 65, 81, 255);
+            wc.pressedColor = tab == TabType.Withdraw
+                ? new Color32(7, 89, 110, 255)
+                : new Color32(25, 33, 44, 255);
+            wc.selectedColor = wc.normalColor;
+            wBtn.colors = wc;
+
+            var dc = dBtn.colors;
+            dc.normalColor = dImg.color;
+            dc.highlightedColor = tab == TabType.Deposit
+                ? new Color32(14, 116, 144, 255)
+                : new Color32(55, 65, 81, 255);
+            dc.pressedColor = tab == TabType.Deposit
+                ? new Color32(7, 89, 110, 255)
+                : new Color32(25, 33, 44, 255);
+            dc.selectedColor = dc.normalColor;
+            dBtn.colors = dc;
+
+            wBtn.OnDeselect(null);
+            dBtn.OnDeselect(null);
+
+            if (UnityEngine.EventSystems.EventSystem.current != null)
+                UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(null);
 
             UpdateUIForCurrentTab();
             UpdateConfirmButtonLayout();
@@ -359,6 +385,14 @@ namespace BankApp
             {
                 txt.text = "Withdraw";
                 _confirmButton.GetComponent<Image>().color = new Color32(204, 77, 77, 255);
+
+                var colors = _confirmButton.colors;
+                colors.normalColor = new Color32(204, 77, 77, 255);
+                colors.highlightedColor = new Color32(184, 57, 57, 255);     
+                colors.pressedColor = new Color32(164, 37, 37, 255);        
+                colors.selectedColor = colors.normalColor;
+                _confirmButton.colors = colors;
+
                 _confirmButton.interactable = true;
             }
             else
@@ -371,7 +405,15 @@ namespace BankApp
                 }
                 else
                 {
-                    _confirmButton.GetComponent<Image>().color = new Color32(77, 204, 77, 255);
+                    _confirmButton.GetComponent<Image>().color = new Color32(5, 150, 105, 255);  
+
+                    var colors = _confirmButton.colors;
+                    colors.normalColor = new Color32(5, 150, 105, 255);   
+                    colors.highlightedColor = new Color32(4, 120, 87, 255);  
+                    colors.pressedColor = new Color32(3, 89, 64, 255);       
+                    colors.selectedColor = colors.normalColor;
+                    _confirmButton.colors = colors;
+
                     _confirmButton.interactable = true;
                 }
             }
