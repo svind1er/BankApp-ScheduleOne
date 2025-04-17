@@ -60,6 +60,10 @@ namespace BankApp
             for (int i = _container.transform.childCount - 1; i >= 0; i--)
                 UnityEngine.Object.Destroy(_container.transform.GetChild(i).gameObject);
 
+            Sprite defaultSprite = Resources.GetBuiltinResource<Sprite>("UI/Skin/UISprite.psd");
+            Sprite roundedEdgeSprite = GetGameSprite("Rectangle_RoundedEdges") ?? defaultSprite;
+            Sprite buttonSprite = roundedEdgeSprite;
+
             var cardGO = new GameObject("Card");
             cardGO.transform.SetParent(_container.transform, false);
             var cardRT = cardGO.AddComponent<RectTransform>();
@@ -73,6 +77,7 @@ namespace BankApp
             var cardImg = cardGO.AddComponent<Image>();
             cardImg.color = new Color32(18, 18, 18, 255);
             cardImg.raycastTarget = true;
+            cardImg.m_PixelsPerUnitMultiplier = 40f;
 
             var headerGO = new GameObject("Header");
             headerGO.transform.SetParent(cardGO.transform, false);
@@ -112,12 +117,12 @@ namespace BankApp
             barLayout.minHeight = 8;
             barLayout.preferredHeight = 8;
 
-            Sprite defaultSprite = Resources.GetBuiltinResource<Sprite>("UI/Skin/UISprite.psd");
 
             var progressBarBg = progressBarGO.AddComponent<Image>();
-            progressBarBg.sprite = defaultSprite;
+            progressBarBg.sprite = roundedEdgeSprite;
             progressBarBg.type = Image.Type.Sliced;
             progressBarBg.color = new Color32(31, 41, 55, 255);
+            progressBarBg.m_PixelsPerUnitMultiplier = 40f;
 
             var progressBarFillGO = new GameObject("ProgressFill");
             progressBarFillGO.transform.SetParent(progressBarGO.transform, false);
@@ -129,9 +134,10 @@ namespace BankApp
             WeeklyProgressFill = progressBarFillRT;
 
             var progressBarFill = progressBarFillGO.AddComponent<Image>();
-            progressBarFill.sprite = defaultSprite;
+            progressBarFill.sprite = roundedEdgeSprite;
             progressBarFill.type = Image.Type.Simple;
             progressBarFill.color = new Color32(59, 130, 246, 255);
+            progressBarFill.m_PixelsPerUnitMultiplier = 40f;
 
             var balanceGO = new GameObject("Balance");
             balanceGO.transform.SetParent(headerGO.transform, false);
@@ -221,8 +227,7 @@ namespace BankApp
             tabsHLG.childForceExpandWidth = true;
             tabsHLG.childForceExpandHeight = true;
 
-            Sprite roundedEdgeSprite = GetGameSprite("Rectangle_RoundedEdges") ?? defaultSprite;
-            Sprite buttonSprite = roundedEdgeSprite;
+
 
             DepositTab = CreateTabButton(tabsGO, "⇧ Deposit", true, _onDepositTab, buttonSprite);
             WithdrawTab = CreateTabButton(tabsGO, "⇩ Withdraw", false, _onWithdrawTab, buttonSprite);
@@ -251,6 +256,7 @@ namespace BankApp
                 btnImg.sprite = buttonSprite;
                 btnImg.type = Image.Type.Sliced;
                 btnImg.color = new Color32(31, 41, 55, 255);
+                btnImg.m_PixelsPerUnitMultiplier = 40f;
 
                 var btn = btnGO.AddComponent<Button>();
                 btn.targetGraphic = btnImg;
@@ -290,6 +296,7 @@ namespace BankApp
             clearImg.sprite = buttonSprite;
             clearImg.type = Image.Type.Sliced;
             clearImg.color = new Color32(31, 41, 55, 255);
+            clearImg.m_PixelsPerUnitMultiplier = 40f;
 
             ResetButton = clearGO.AddComponent<Button>();
             ResetButton.targetGraphic = clearImg;
@@ -312,6 +319,7 @@ namespace BankApp
             maxImg.sprite = buttonSprite;
             maxImg.type = Image.Type.Sliced;
             maxImg.color = new Color32(31, 41, 55, 255);
+            maxImg.m_PixelsPerUnitMultiplier = 40f;
 
             MaxButton = maxGO.AddComponent<Button>();
             MaxButton.targetGraphic = maxImg;
@@ -338,6 +346,7 @@ namespace BankApp
             confirmImg.sprite = buttonSprite;
             confirmImg.type = Image.Type.Sliced;
             confirmImg.color = new Color32(5, 150, 105, 255);
+            confirmImg.m_PixelsPerUnitMultiplier = 40f;
 
             ConfirmButton = confirmGO.AddComponent<Button>();
             ConfirmButton.targetGraphic = confirmImg;
@@ -375,6 +384,7 @@ namespace BankApp
             img.color = active
                 ? new Color32(8, 145, 178, 255)
                 : new Color32(31, 41, 55, 255);
+            img.m_PixelsPerUnitMultiplier = 40f;
 
             var btn = go.AddComponent<Button>();
             btn.targetGraphic = img;
