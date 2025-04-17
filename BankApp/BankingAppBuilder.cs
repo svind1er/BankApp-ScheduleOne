@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 using Il2CppScheduleOne.Money;
+using System.Reflection.Metadata;
 
 namespace BankApp
 {
@@ -220,8 +221,11 @@ namespace BankApp
             tabsHLG.childForceExpandWidth = true;
             tabsHLG.childForceExpandHeight = true;
 
-            DepositTab = CreateTabButton(tabsGO, "⇧ Deposit", true, _onDepositTab);
-            WithdrawTab = CreateTabButton(tabsGO, "⇩ Withdraw", false, _onWithdrawTab);
+            Sprite roundedEdgeSprite = GetGameSprite("Rectangle_RoundedEdges") ?? defaultSprite;
+            Sprite buttonSprite = roundedEdgeSprite;
+
+            DepositTab = CreateTabButton(tabsGO, "⇧ Deposit", true, _onDepositTab, buttonSprite);
+            WithdrawTab = CreateTabButton(tabsGO, "⇩ Withdraw", false, _onWithdrawTab, buttonSprite);
 
             var gridGO = new GameObject("AmountButtons");
             gridGO.transform.SetParent(cardGO.transform, false);
@@ -244,16 +248,18 @@ namespace BankApp
                 btnGO.transform.SetParent(gridGO.transform, false);
 
                 var btnImg = btnGO.AddComponent<Image>();
+                btnImg.sprite = buttonSprite;
+                btnImg.type = Image.Type.Sliced;
                 btnImg.color = new Color32(31, 41, 55, 255);
 
                 var btn = btnGO.AddComponent<Button>();
                 btn.targetGraphic = btnImg;
 
                 var colors = btn.colors;
-                colors.normalColor = new Color32(31, 41, 55, 255);
+                colors.normalColor = btnImg.color;
                 colors.highlightedColor = new Color32(55, 65, 81, 255);
                 colors.pressedColor = new Color32(20, 24, 29, 255);
-                colors.selectedColor = colors.normalColor;
+                colors.selectedColor = btnImg.color;
                 btn.colors = colors;
 
                 var btnText = CreateText("Text", btnGO.transform, 16, Color.white);
@@ -281,15 +287,17 @@ namespace BankApp
             var clearGO = new GameObject("ClearButton");
             clearGO.transform.SetParent(actionButtonsGO.transform, false);
             var clearImg = clearGO.AddComponent<Image>();
+            clearImg.sprite = buttonSprite;
+            clearImg.type = Image.Type.Sliced;
             clearImg.color = new Color32(31, 41, 55, 255);
 
             ResetButton = clearGO.AddComponent<Button>();
             ResetButton.targetGraphic = clearImg;
             var clearColors = ResetButton.colors;
-            clearColors.normalColor = new Color32(31, 41, 55, 255);
+            clearColors.normalColor = clearImg.color;
             clearColors.highlightedColor = new Color32(55, 65, 81, 255);
             clearColors.pressedColor = new Color32(20, 24, 29, 255);
-            clearColors.selectedColor = clearColors.normalColor;
+            clearColors.selectedColor = clearImg.color;
             ResetButton.colors = clearColors;
 
             var clearText = CreateText("Text", clearGO.transform, 16, Color.white);
@@ -301,21 +309,21 @@ namespace BankApp
             var maxGO = new GameObject("MaxButton");
             maxGO.transform.SetParent(actionButtonsGO.transform, false);
             var maxImg = maxGO.AddComponent<Image>();
+            maxImg.sprite = buttonSprite;
+            maxImg.type = Image.Type.Sliced;
             maxImg.color = new Color32(31, 41, 55, 255);
 
             MaxButton = maxGO.AddComponent<Button>();
             MaxButton.targetGraphic = maxImg;
             var maxColors = MaxButton.colors;
-            maxColors.normalColor = new Color32(31, 41, 55, 255);
+            maxColors.normalColor = maxImg.color;
             maxColors.highlightedColor = new Color32(55, 65, 81, 255);
             maxColors.pressedColor = new Color32(20, 24, 29, 255);
-            maxColors.selectedColor = maxColors.normalColor;
+            maxColors.selectedColor = maxImg.color;
             MaxButton.colors = maxColors;
-
             var maxText = CreateText("Text", maxGO.transform, 16, Color.white);
             maxText.text = "MAX";
             maxText.alignment = TextAnchor.MiddleCenter;
-
             MaxButton.onClick.AddListener((UnityAction)(() => _onMax()));
 
             var confirmGO = new GameObject("ConfirmButton");
@@ -327,53 +335,62 @@ namespace BankApp
             confirmRT.offsetMax = new Vector2(0, 4);
 
             var confirmImg = confirmGO.AddComponent<Image>();
+            confirmImg.sprite = buttonSprite;
+            confirmImg.type = Image.Type.Sliced;
             confirmImg.color = new Color32(5, 150, 105, 255);
+
             ConfirmButton = confirmGO.AddComponent<Button>();
             ConfirmButton.targetGraphic = confirmImg;
             var confirmColors = ConfirmButton.colors;
-            confirmColors.normalColor = new Color32(5, 150, 105, 255);
+            confirmColors.normalColor = confirmImg.color;
             confirmColors.highlightedColor = new Color32(4, 120, 87, 255);
             confirmColors.pressedColor = new Color32(3, 89, 64, 255);
-            confirmColors.selectedColor = confirmColors.normalColor;
+            confirmColors.selectedColor = confirmImg.color;
             ConfirmButton.colors = confirmColors;
 
             var confirmText = CreateText("Text", confirmGO.transform, 18, Color.white);
             confirmText.text = "";
             confirmText.alignment = TextAnchor.MiddleCenter;
             confirmText.fontStyle = FontStyle.Bold;
-
             ConfirmButton.onClick.AddListener((UnityAction)(() => _onConfirm()));
 
             MelonLogger.Msg("BankingAppBuilder: UI build complete.");
         }
 
-        private GameObject CreateTabButton(GameObject parent, string label, bool active, Action onClick)
+        private GameObject CreateTabButton(
+            GameObject parent,
+            string label,
+            bool active,
+            Action onClick,
+            Sprite buttonSprite)
         {
             var go = new GameObject($"{label}Tab");
             go.transform.SetParent(parent.transform, false);
             var rt = go.AddComponent<RectTransform>();
             rt.sizeDelta = new Vector2(0, 40);
 
-            var btn = go.AddComponent<Button>();
-
             var img = go.AddComponent<Image>();
-            img.color = active ?
-                new Color32(8, 145, 178, 255) :
-                new Color32(31, 41, 55, 255);
+            img.sprite = buttonSprite;
+            img.type = Image.Type.Sliced;
+            img.color = active
+                ? new Color32(8, 145, 178, 255)
+                : new Color32(31, 41, 55, 255);
+
+            var btn = go.AddComponent<Button>();
+            btn.targetGraphic = img;
 
             var colors = btn.colors;
             colors.normalColor = img.color;
-            colors.highlightedColor = active ?
-                new Color32(14, 116, 144, 255) :
-                new Color32(55, 65, 81, 255);
-            colors.pressedColor = active ?
-                new Color32(7, 89, 110, 255) :
-                new Color32(20, 24, 29, 255);
-            colors.selectedColor = colors.normalColor;
+            colors.highlightedColor = active
+                ? new Color32(14, 116, 144, 255)
+                : new Color32(55, 65, 81, 255);
+            colors.pressedColor = active
+                ? new Color32(7, 89, 110, 255)
+                : new Color32(20, 24, 29, 255);
+            colors.selectedColor = img.color;
             btn.colors = colors;
-            btn.targetGraphic = img;
 
-            var text = CreateText($"{label}Text", go.transform, 14, Color.white);
+            var text = CreateText($"{label}Text", go.transform, 20, Color.white);
             text.text = label;
             text.alignment = TextAnchor.MiddleCenter;
             text.fontStyle = FontStyle.Bold;
@@ -399,6 +416,19 @@ namespace BankApp
             t.alignment = TextAnchor.MiddleCenter;
             t.fontStyle = FontStyle.Bold;
             return t;
+        }
+
+        private Sprite GetGameSprite(string spriteName)
+        {
+            Sprite[] sprites = Resources.FindObjectsOfTypeAll<Sprite>();
+            foreach (var sprite in sprites)
+            {
+                if (sprite.name.Equals(spriteName, StringComparison.OrdinalIgnoreCase))
+                    return sprite;
+            }
+
+            MelonLogger.Error($"Sprite '{spriteName}' not found!");
+            return null;
         }
     }
 }
