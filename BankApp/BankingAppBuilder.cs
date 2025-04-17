@@ -3,6 +3,7 @@ using System;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
+using Il2CppScheduleOne.Money;
 
 namespace BankApp
 {
@@ -57,138 +58,315 @@ namespace BankApp
             for (int i = _container.transform.childCount - 1; i >= 0; i--)
                 UnityEngine.Object.Destroy(_container.transform.GetChild(i).gameObject);
 
-            var bgGO = new GameObject("Background");
-            bgGO.transform.SetParent(_container.transform, false);
-            var bgRT = bgGO.AddComponent<RectTransform>();
-            bgRT.anchorMin = Vector2.zero;
-            bgRT.anchorMax = Vector2.one;
-            bgRT.offsetMin = bgRT.offsetMax = Vector2.zero;
+            var cardGO = new GameObject("Card");
+            cardGO.transform.SetParent(_container.transform, false);
+            var cardRT = cardGO.AddComponent<RectTransform>();
+            cardRT.anchorMin = new Vector2(0.5f, 0.5f);
+            cardRT.anchorMax = new Vector2(0.5f, 0.5f);
+            cardRT.sizeDelta = new Vector2(400, 600);
+            cardRT.pivot = new Vector2(0.5f, 0.5f);
+            cardRT.anchoredPosition = Vector2.zero;
+            cardRT.localScale = new Vector3(1.6145f, 2.0618f, 1);
 
-            var gradTex = new Texture2D(1, 256);
-            for (int y = 0; y < 256; y++)
-            {
-                float t = y / 255f;
-                var top = new Color(0.18f, 0.48f, 0.95f);
-                var bottom = new Color(0.18f, 0.31f, 0.51f);
-                gradTex.SetPixel(0, y, Color.Lerp(bottom, top, t));
-            }
-            gradTex.Apply();
+            var cardImg = cardGO.AddComponent<Image>();
+            cardImg.color = new Color32(18, 18, 18, 255);
+            cardImg.raycastTarget = true;
 
-            var gradSpr = Sprite.Create(
-                gradTex,
-                new Rect(0, 0, gradTex.width, gradTex.height),
-                new Vector2(0.5f, 0.5f)
-            );
+            var headerGO = new GameObject("Header");
+            headerGO.transform.SetParent(cardGO.transform, false);
+            var headerRT = headerGO.AddComponent<RectTransform>();
+            headerRT.anchorMin = new Vector2(0, 0.7f);
+            headerRT.anchorMax = new Vector2(1, 1);
+            headerRT.offsetMin = headerRT.offsetMax = Vector2.zero;
+            headerRT.pivot = new Vector2(0.5f, 1f);
 
-            var bgImg = bgGO.AddComponent<Image>();
-            bgImg.sprite = gradSpr;
-            bgImg.type = Image.Type.Simple;
-            bgImg.preserveAspect = false;
+            var headerVLG = headerGO.AddComponent<VerticalLayoutGroup>();
+            headerVLG.spacing = 10;
+            headerVLG.padding = new RectOffset(20, 20, 20, 20);
+            headerVLG.childAlignment = TextAnchor.UpperCenter;
+            headerVLG.childForceExpandWidth = true;
+            headerVLG.childForceExpandHeight = false;
 
-            var infoGO = new GameObject("InfoPanel");
-            infoGO.transform.SetParent(_container.transform, false);
-            var vlg = infoGO.AddComponent<VerticalLayoutGroup>();
-            var rt = infoGO.GetComponent<RectTransform>();
-            rt.anchorMin = new Vector2(0.05f, 0.75f);
-            rt.anchorMax = new Vector2(0.95f, 0.98f);
-            rt.offsetMin = rt.offsetMax = Vector2.zero;
-            vlg.spacing = 5;
-            vlg.childAlignment = TextAnchor.MiddleCenter;
+            var progressGO = new GameObject("Progress");
+            progressGO.transform.SetParent(headerGO.transform, false);
 
-            WeeklyAmountText = CreateText("WeeklyLimit", infoGO.transform, 34, Color.white);
-            OnlineBalanceText = CreateText("OnlineBalance", infoGO.transform, 33, Color.cyan);
-            CashBalanceText = CreateText("CashBalance", infoGO.transform, 33, Color.green);
-            SelectedAmountText = CreateText("SelectedAmount", infoGO.transform, 33, Color.yellow);
-            SelectedAmountText.text = "Deposit: $0.00";
+            var progressHLG = progressGO.AddComponent<HorizontalLayoutGroup>();
+            progressHLG.childAlignment = TextAnchor.MiddleCenter;
+            progressHLG.childForceExpandWidth = true;
+            progressHLG.childForceExpandHeight = false;
 
-            var tabsGO = new GameObject("TabPanel");
-            tabsGO.transform.SetParent(_container.transform, false);
-            var tabsRt = tabsGO.AddComponent<RectTransform>();
-            tabsRt.anchorMin = new Vector2(0.05f, 0.8f);
-            tabsRt.anchorMax = new Vector2(0.95f, 0.9f);
-            tabsRt.offsetMin = tabsRt.offsetMax = Vector2.zero;
-            tabsGO.transform.localPosition = new Vector3(0, 200, 0);
+            var progressText = CreateText("ProgressText", progressGO.transform, 16, new Color32(209, 213, 219, 255));
+            progressText.text = "Weekly Progress";
+            progressText.alignment = TextAnchor.MiddleLeft;
 
-            var hlg = tabsGO.AddComponent<HorizontalLayoutGroup>();
-            hlg.spacing = 15;
-            hlg.childAlignment = TextAnchor.MiddleCenter;
-            hlg.childForceExpandWidth = true;
+            var progressAmount = CreateText("ProgressAmount", progressGO.transform, 16, new Color32(209, 213, 219, 255));
+            progressAmount.text = $"${ATM.WeeklyDepositSum} / ${ATM.WEEKLY_DEPOSIT_LIMIT}"; // ts needs to be updated on deposit and all that, it dont work
+            progressAmount.alignment = TextAnchor.MiddleRight;
 
-            DepositTab = CreateTabButton(tabsGO, "Deposit", true, _onDepositTab);
-            WithdrawTab = CreateTabButton(tabsGO, "Withdraw", false, _onWithdrawTab);
+            // i just copypasted and changed name n moved it around iunno but ts does NOT work
+            var progressBarGO = new GameObject("ProgressBar");
+            progressBarGO.transform.SetParent(headerGO.transform, false);
+            var progressBarRT = progressBarGO.AddComponent<RectTransform>();
+            progressBarRT.sizeDelta = new Vector2(0, 8);
+
+            var progressBarBg = progressBarGO.AddComponent<Image>();
+            progressBarBg.color = new Color32(31, 41, 55, 255);
+
+            var progressBarFillGO = new GameObject("ProgressFill");
+            progressBarFillGO.transform.SetParent(progressBarGO.transform, false);
+            var progressBarFillRT = progressBarFillGO.AddComponent<RectTransform>();
+            progressBarFillRT.anchorMin = Vector2.zero;
+            progressBarFillRT.anchorMax = new Vector2(0.37f, 1);
+            progressBarFillRT.offsetMin = progressBarFillRT.offsetMax = Vector2.zero;
+
+            var progressBarFill = progressBarFillGO.AddComponent<Image>();
+            progressBarFill.color = new Color32(59, 130, 246, 255);
+
+            var balanceGO = new GameObject("Balance");
+            balanceGO.transform.SetParent(headerGO.transform, false);
+            var balanceRT = balanceGO.AddComponent<RectTransform>();
+            balanceRT.sizeDelta = new Vector2(0, 60);
+            Canvas.ForceUpdateCanvases();
+
+            balanceRT.anchorMin = new Vector2(0.5f, 0.5f);
+            balanceRT.anchorMax = new Vector2(0.5f, 0.5f);
+            balanceRT.pivot = new Vector2(0.5f, 0.5f);
+            balanceRT.anchoredPosition = new Vector2(0, 40);
+
+            var balanceHLG = balanceGO.AddComponent<HorizontalLayoutGroup>();
+            balanceHLG.spacing = 20;
+            balanceHLG.childAlignment = TextAnchor.MiddleCenter;
+            balanceHLG.childForceExpandWidth = true;
+            balanceHLG.childForceExpandHeight = true;
+
+            var cashBalanceGO = new GameObject("CashBalance");
+            cashBalanceGO.transform.SetParent(balanceGO.transform, false);
+            var cashBalanceVLG = cashBalanceGO.AddComponent<VerticalLayoutGroup>();
+            cashBalanceVLG.spacing = 5;
+            cashBalanceVLG.childAlignment = TextAnchor.MiddleCenter;
+            cashBalanceVLG.childForceExpandWidth = false;
+            cashBalanceVLG.childForceExpandHeight = false;
+
+            var cashBalanceLabel = CreateText("CashLabel", cashBalanceGO.transform, 20, new Color32(139, 145, 155, 255));
+            cashBalanceLabel.text = "Cash Balance";
+            cashBalanceLabel.alignment = TextAnchor.MiddleCenter;
+
+            CashBalanceText = CreateText("CashBalanceText", cashBalanceGO.transform, 20, new Color32(52, 211, 153, 255));
+            CashBalanceText.text = "$0.00";
+            CashBalanceText.alignment = TextAnchor.MiddleCenter;
+            CashBalanceText.fontStyle = FontStyle.Bold;
+
+            var onlineBalanceGO = new GameObject("OnlineBalance");
+            onlineBalanceGO.transform.SetParent(balanceGO.transform, false);
+            var onlineBalanceVLG = onlineBalanceGO.AddComponent<VerticalLayoutGroup>();
+            onlineBalanceVLG.spacing = 5;
+            onlineBalanceVLG.childAlignment = TextAnchor.MiddleCenter;
+            onlineBalanceVLG.childForceExpandWidth = false;
+            onlineBalanceVLG.childForceExpandHeight = false;
+
+            var onlineBalanceLabel = CreateText("OnlineLabel", onlineBalanceGO.transform, 20, new Color32(139, 145, 155, 255));
+            onlineBalanceLabel.text = "Online Balance";
+            onlineBalanceLabel.alignment = TextAnchor.MiddleCenter;
+
+            OnlineBalanceText = CreateText("OnlineBalanceText", onlineBalanceGO.transform, 20, new Color32(34, 211, 238, 255));
+            OnlineBalanceText.text = "$0.00";
+            OnlineBalanceText.alignment = TextAnchor.MiddleCenter;
+            OnlineBalanceText.fontStyle = FontStyle.Bold;
+
+            var amountDisplayGO = new GameObject("AmountDisplay");
+            amountDisplayGO.transform.SetParent(headerGO.transform, false);
+            var amountDisplayRT = amountDisplayGO.AddComponent<RectTransform>();
+            amountDisplayRT.sizeDelta = new Vector2(0, 40);
+
+            var amountDisplayHLG = amountDisplayGO.AddComponent<HorizontalLayoutGroup>();
+            amountDisplayHLG.spacing = 10;
+            amountDisplayHLG.childAlignment = TextAnchor.MiddleCenter;
+            amountDisplayHLG.childForceExpandWidth = true;
+            amountDisplayHLG.childForceExpandHeight = true;
+
+            var amountLabel = CreateText("AmountLabel", amountDisplayGO.transform, 14, new Color32(209, 213, 219, 255));
+            amountLabel.text = "Amount";
+            amountLabel.alignment = TextAnchor.MiddleLeft;
+            amountLabel.fontStyle = FontStyle.Bold;
+            amountLabel.fontSize = 18;
+
+            SelectedAmountText = CreateText("AmountText", amountDisplayGO.transform, 18, Color.white);
+            SelectedAmountText.text = "$0.00";
+            SelectedAmountText.alignment = TextAnchor.MiddleRight;
+            SelectedAmountText.fontStyle = FontStyle.Bold;
+
+            var tabsGO = new GameObject("Tabs");
+            tabsGO.transform.SetParent(cardGO.transform, false);
+            var tabsRT = tabsGO.AddComponent<RectTransform>();
+            tabsRT.anchorMin = new Vector2(0.5f, 1);
+            tabsRT.anchorMax = new Vector2(0.5f, 1);
+            tabsRT.pivot = new Vector2(0.5f, 1);
+            tabsRT.sizeDelta = new Vector2(360, 35);
+            tabsRT.anchoredPosition = new Vector2(0, -165);
+
+            var tabsHLG = tabsGO.AddComponent<HorizontalLayoutGroup>();
+            tabsHLG.spacing = 10;
+            tabsHLG.childAlignment = TextAnchor.MiddleCenter;
+            tabsHLG.childForceExpandWidth = true;
+            tabsHLG.childForceExpandHeight = true;
+
+            DepositTab = CreateTabButton(tabsGO, "⇧ Deposit", true, _onDepositTab);
+            WithdrawTab = CreateTabButton(tabsGO, "⇩ Withdraw", false, _onWithdrawTab);
 
             var gridGO = new GameObject("AmountButtons");
-            gridGO.transform.SetParent(_container.transform, false);
-            var gridRt = gridGO.AddComponent<RectTransform>();
-            gridGO.transform.localPosition = new Vector2(249, -400);
-            gridGO.transform.localScale = new Vector2(1.4f, 1.4f);
-            gridRt.anchorMin = new Vector2(0.05f, 0.25f);
-            gridRt.anchorMax = new Vector2(0.95f, 0.74f);
+            gridGO.transform.SetParent(cardGO.transform, false);
+            var gridRT = gridGO.AddComponent<RectTransform>();
+            gridRT.anchorMin = new Vector2(0.0515f, 1);
+            gridRT.anchorMax = new Vector2(1f, 1);
+            gridRT.offsetMin = Vector2.zero;
+            gridRT.offsetMax = Vector2.zero;
+            gridRT.anchoredPosition = new Vector2(0, -210);
 
             var grid = gridGO.AddComponent<GridLayoutGroup>();
-            grid.cellSize = new Vector2(160, 50);
-            grid.spacing = new Vector2(15, 15);
+            grid.cellSize = new Vector2(174.6f, 50);
+            grid.spacing = new Vector2(10, 10);
             grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
             grid.constraintCount = 2;
 
             foreach (var amt in _amounts)
             {
-                var bgo = new GameObject($"Amount_{amt}");
-                bgo.transform.SetParent(gridGO.transform, false);
-                var brt = bgo.AddComponent<RectTransform>();
-                brt.sizeDelta = new Vector2(160, 50);
+                var btnGO = new GameObject($"Amount_{amt}");
+                btnGO.transform.SetParent(gridGO.transform, false);
 
-                var img = bgo.AddComponent<Image>();
-                img.color = new Color(0.8f, 0.85f, 0.9f);
+                var btnImg = btnGO.AddComponent<Image>();
+                btnImg.color = new Color32(31, 41, 55, 255);
 
-                var btn = bgo.AddComponent<Button>();
-                btn.targetGraphic = img;
-                btn.transition = Selectable.Transition.ColorTint;
-                var cb = btn.colors;
-                cb.normalColor = img.color;
-                cb.highlightedColor = Color.white;
-                cb.pressedColor = new Color(0.6f, 0.7f, 0.8f);
-                cb.disabledColor = Color.gray;
-                btn.colors = cb;
+                var btn = btnGO.AddComponent<Button>();
+                btn.targetGraphic = btnImg;
 
-                var tgo = new GameObject("Text");
-                tgo.transform.SetParent(bgo.transform, false);
-                var trt = tgo.AddComponent<RectTransform>();
-                trt.anchorMin = Vector2.zero;
-                trt.anchorMax = Vector2.one;
-                trt.offsetMin = trt.offsetMax = Vector2.zero;
+                var colors = btn.colors;
+                colors.normalColor = btnImg.color;
+                colors.highlightedColor = new Color32(56, 66, 82, 255);
+                colors.pressedColor = new Color32(20, 31, 46, 255);
+                btn.colors = colors;
 
-                var txt = tgo.AddComponent<Text>();
-                txt.text = $"${amt}";
-                txt.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-                txt.alignment = TextAnchor.MiddleCenter;
-                txt.color = Color.white;
-                txt.fontSize = 20;
+                var btnText = CreateText("Text", btnGO.transform, 16, Color.white);
+                btnText.text = $"${amt}";
+                btnText.alignment = TextAnchor.MiddleCenter;
 
                 btn.onClick.AddListener((UnityAction)(() => _onAmountSelected(amt)));
             }
 
-            var cgo = CreateActionButton(_container, "Confirm",
-                new Vector2(0.3f, 0.05f), new Vector2(0.7f, 0.15f),
-                new Color(0.3f, 0.6f, 0.3f), 35, 150, 1);
-            ConfirmButton = cgo.GetComponent<Button>();
-            ConfirmButton.onClick.AddListener((UnityAction)(() => _onConfirm()));
+            var actionButtonsGO = new GameObject("ActionButtons");
+            actionButtonsGO.transform.SetParent(cardGO.transform, false);
+            var actionButtonsRT = actionButtonsGO.AddComponent<RectTransform>();
+            actionButtonsRT.anchorMin = new Vector2(0.5f, 0);
+            actionButtonsRT.anchorMax = new Vector2(0.5f, 0);
+            actionButtonsRT.pivot = new Vector2(0.5f, 0);
+            actionButtonsRT.sizeDelta = new Vector2(360, 50);
+            actionButtonsRT.anchoredPosition = new Vector2(0, 100);
 
-            var mgo = CreateActionButton(_container, "MAX",
-                new Vector2(0.3f, 0.1f), new Vector2(0.7f, 0.2f),
-                new Color(0.6f, 0.7f, 0.8f), 35, -37, -49.6f);
-            MaxButton = mgo.GetComponent<Button>();
-            MaxButton.transform.localPosition = new Vector2(124.269f, -320f);
-            MaxButton.onClick.AddListener((UnityAction)(() => _onMax()));
+            var actionButtonsHLG = actionButtonsGO.AddComponent<HorizontalLayoutGroup>();
+            actionButtonsHLG.spacing = 10;
+            actionButtonsHLG.childAlignment = TextAnchor.MiddleCenter;
+            actionButtonsHLG.childForceExpandWidth = true;
+            actionButtonsHLG.childForceExpandHeight = true;
 
-            var rgo = CreateActionButton(_container, "Clear",
-                new Vector2(0.3f, 0.1f), new Vector2(0.7f, 0.2f),
-                new Color(0.6f, 0.7f, 0.8f), 35, -37, -49.6f);
-            ResetButton = rgo.GetComponent<Button>();
-            ResetButton.transform.localPosition = new Vector2(-122.169f, -320f);
+            var clearGO = new GameObject("ClearButton");
+            clearGO.transform.SetParent(actionButtonsGO.transform, false);
+            var clearImg = clearGO.AddComponent<Image>();
+            clearImg.color = new Color32(31, 41, 55, 255);
+
+            ResetButton = clearGO.AddComponent<Button>();
+            ResetButton.targetGraphic = clearImg;
+            var clearColors = ResetButton.colors;
+            clearColors.normalColor = clearImg.color;
+            clearColors.highlightedColor = new Color32(56, 66, 82, 255);
+            clearColors.pressedColor = new Color32(20, 31, 46, 255);
+            ResetButton.colors = clearColors;
+
+            var clearText = CreateText("Text", clearGO.transform, 16, Color.white);
+            clearText.text = "✕ Clear";
+            clearText.alignment = TextAnchor.MiddleCenter;
+
             ResetButton.onClick.AddListener((UnityAction)(() => _onReset()));
 
+            var maxGO = new GameObject("MaxButton");
+            maxGO.transform.SetParent(actionButtonsGO.transform, false);
+            var maxImg = maxGO.AddComponent<Image>();
+            maxImg.color = new Color32(31, 41, 55, 255);
+
+            MaxButton = maxGO.AddComponent<Button>();
+            MaxButton.targetGraphic = maxImg;
+            var maxColors = MaxButton.colors;
+            maxColors.normalColor = maxImg.color;
+            maxColors.highlightedColor = new Color32(56, 66, 82, 255);
+            maxColors.pressedColor = new Color32(20, 31, 46, 255);
+            MaxButton.colors = maxColors;
+
+            var maxText = CreateText("Text", maxGO.transform, 16, Color.white);
+            maxText.text = "MAX";
+            maxText.alignment = TextAnchor.MiddleCenter;
+
+            MaxButton.onClick.AddListener((UnityAction)(() => _onMax()));
+
+            var confirmGO = new GameObject("ConfirmButton");
+            confirmGO.transform.SetParent(cardGO.transform, false);
+            var confirmRT = confirmGO.AddComponent<RectTransform>();
+            confirmRT.anchorMin = new Vector2(0.05f, 0.05f);
+            confirmRT.anchorMax = new Vector2(0.95f, 0.143f);
+            confirmRT.offsetMin = new Vector2(0, 4);
+            confirmRT.offsetMax = new Vector2(0, 4);
+
+            var confirmImg = confirmGO.AddComponent<Image>();
+            confirmImg.color = new Color32(5, 150, 105, 255);
+            ConfirmButton = confirmGO.AddComponent<Button>();
+            ConfirmButton.targetGraphic = confirmImg;
+            var confirmColors = ConfirmButton.colors;
+            confirmColors.normalColor = confirmImg.color;
+            confirmColors.highlightedColor = new Color32(5, 120, 87, 255);
+            confirmColors.pressedColor = new Color32(3, 89, 64, 255);
+            ConfirmButton.colors = confirmColors;
+
+            var confirmText = CreateText("Text", confirmGO.transform, 18, Color.white);
+            confirmText.text = "";
+            confirmText.alignment = TextAnchor.MiddleCenter;
+            confirmText.fontStyle = FontStyle.Bold;
+
+            ConfirmButton.onClick.AddListener((UnityAction)(() => _onConfirm()));
+
             MelonLogger.Msg("BankingAppBuilder: UI build complete.");
+        }
+
+        private GameObject CreateTabButton(GameObject parent, string label, bool active, Action onClick)
+        {
+            var go = new GameObject($"{label}Tab");
+            go.transform.SetParent(parent.transform, false);
+            var rt = go.AddComponent<RectTransform>();
+            rt.sizeDelta = new Vector2(0, 40);
+
+            var btn = go.AddComponent<Button>();
+
+            var img = go.AddComponent<Image>();
+            img.color = active ?
+                new Color32(8, 145, 178, 255) :
+                new Color32(31, 41, 55, 255);
+
+            var colors = btn.colors;
+            colors.normalColor = img.color;
+            colors.highlightedColor = active ?
+                new Color32(14, 116, 144, 255) :
+                new Color32(49, 64, 84, 255);
+            colors.pressedColor = active ?
+                new Color32(8, 102, 128, 255) :
+                new Color32(31, 41, 55, 255);
+            colors.selectedColor = colors.normalColor;
+            btn.colors = colors;
+            btn.targetGraphic = img;
+
+            var text = CreateText($"{label}Text", go.transform, 14, Color.white);
+            text.text = label;
+            text.alignment = TextAnchor.MiddleCenter;
+            text.fontStyle = FontStyle.Bold;
+            text.fontSize = 20;
+
+            btn.onClick.AddListener((UnityAction)(() => onClick()));
+            return go;
         }
 
         private Text CreateText(string name, Transform parent, int size, Color col)
@@ -207,81 +385,6 @@ namespace BankApp
             t.alignment = TextAnchor.MiddleCenter;
             t.fontStyle = FontStyle.Bold;
             return t;
-        }
-
-        private GameObject CreateTabButton(
-            GameObject parent, string label, bool active, Action onClick)
-        {
-            var go = new GameObject($"Tab_{label}");
-            go.transform.SetParent(parent.transform, false);
-            var rt = go.AddComponent<RectTransform>();
-            rt.sizeDelta = new Vector2(180, 50);
-
-            var img = go.AddComponent<Image>();
-            img.color = active
-                ? new Color(0.2f, 0.4f, 0.8f)
-                : new Color(0.5f, 0.5f, 0.5f);
-
-            var btn = go.AddComponent<Button>();
-            btn.targetGraphic = img;
-            var cb = btn.colors;
-            cb.normalColor = img.color;
-            cb.highlightedColor = img.color + new Color(0.1f, 0.1f, 0.1f);
-            cb.pressedColor = img.color - new Color(0.1f, 0.1f, 0.1f);
-            btn.colors = cb;
-
-            var tgo = new GameObject("Text");
-            tgo.transform.SetParent(go.transform, false);
-            var trt = tgo.AddComponent<RectTransform>();
-            trt.anchorMin = Vector2.zero;
-            trt.anchorMax = Vector2.one;
-            trt.offsetMin = trt.offsetMax = Vector2.zero;
-
-            var txt = tgo.AddComponent<Text>();
-            txt.text = label;
-            txt.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-            txt.alignment = TextAnchor.MiddleCenter;
-            txt.color = Color.white;
-            txt.fontSize = 24;
-            txt.fontStyle = FontStyle.Bold;
-
-            btn.onClick.AddListener((UnityAction)(() => onClick()));
-            return go;
-        }
-
-        private GameObject CreateActionButton(
-            GameObject parent, string label,
-            Vector2 aMin, Vector2 aMax,
-            Color col, int fs, float w, float h)
-        {
-            var go = new GameObject($"{label}Button");
-            go.transform.SetParent(parent.transform, false);
-            var rt = go.AddComponent<RectTransform>();
-            rt.anchorMin = aMin;
-            rt.anchorMax = aMax;
-            rt.offsetMin = rt.offsetMax = Vector2.zero;
-            rt.sizeDelta = new Vector2(w, h);
-
-            var img = go.AddComponent<Image>();
-            img.color = col;
-            go.AddComponent<Button>();
-
-            var tgo = new GameObject("Text");
-            tgo.transform.SetParent(go.transform, false);
-            var trt = tgo.AddComponent<RectTransform>();
-            trt.anchorMin = Vector2.zero;
-            trt.anchorMax = Vector2.one;
-            trt.offsetMin = trt.offsetMax = Vector2.zero;
-
-            var txt = tgo.AddComponent<Text>();
-            txt.text = label;
-            txt.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-            txt.alignment = TextAnchor.MiddleCenter;
-            txt.color = Color.white;
-            txt.fontSize = fs;
-            txt.fontStyle = FontStyle.Bold;
-
-            return go;
         }
     }
 }

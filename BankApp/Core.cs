@@ -29,7 +29,7 @@ namespace BankApp
 
         private float _selectedAmount = 0f;
         private int[] amounts = new int[] { 1, 5, 10, 25, 50, 100, 500, 1000 };
-        private int _weeklyDepositLimit = 10000;
+        private int _weeklyDepositLimit = (int)ATM.WEEKLY_DEPOSIT_LIMIT;
 
         private Text _onlineBalanceText;
         private Text _cashBalanceText;
@@ -46,8 +46,10 @@ namespace BankApp
         private GameObject _withdrawTab;
         private GameObject _depositTab;
 
-        private enum TabType { Withdraw, Deposit }
-        private TabType _currentTab = TabType.Withdraw;
+        private enum TabType
+        { Withdraw, Deposit }
+
+        private TabType _currentTab = TabType.Deposit;
 
         public override void OnInitializeMelon()
         {
@@ -163,7 +165,8 @@ namespace BankApp
                         container,
                         amt => OnSelectAmount(amt),
                         () => OnConfirmPressed(),
-                        () => {
+                        () =>
+                        {
                             var mm = NetworkSingleton<MoneyManager>.Instance;
                             if (mm == null) return;
                             if (_currentTab == TabType.Withdraw)
@@ -277,7 +280,8 @@ namespace BankApp
                     container,
                     amt => OnSelectAmount(amt),
                     () => OnConfirmPressed(),
-                    () => {
+                    () =>
+                    {
                         var mm = NetworkSingleton<MoneyManager>.Instance;
                         if (mm == null) return;
                         if (_currentTab == TabType.Withdraw)
@@ -312,11 +316,12 @@ namespace BankApp
             var wImg = _withdrawTab.GetComponent<Image>();
             var dImg = _depositTab.GetComponent<Image>();
             wImg.color = (tab == TabType.Withdraw)
-                         ? new Color(0.2f, 0.4f, 0.8f)
-                         : new Color(0.5f, 0.5f, 0.5f);
+                ? new Color32(51, 102, 204, 255)
+                : new Color32(127, 127, 127, 255);
+
             dImg.color = (tab == TabType.Deposit)
-                         ? new Color(0.2f, 0.4f, 0.8f)
-                         : new Color(0.5f, 0.5f, 0.5f);
+                ? new Color32(51, 102, 204, 255)
+                : new Color32(127, 127, 127, 255);
 
             var wBtn = _withdrawTab.GetComponent<Button>();
             var dBtn = _depositTab.GetComponent<Button>();
@@ -330,20 +335,21 @@ namespace BankApp
         private void UpdateUIForCurrentTab()
         {
             if (_currentTab == TabType.Withdraw)
-                _selectedAmountText.text = $"Withdraw: ${_selectedAmount:N2}";
+                _selectedAmountText.text = $"${_selectedAmount:N0}";
             else
-                _selectedAmountText.text = $"Deposit: ${_selectedAmount:N2}";
+                _selectedAmountText.text = $"${_selectedAmount:N0}";
             UpdateSelectedAmount(0);
         }
 
         private void UpdateConfirmButtonLayout()
         {
             if (_confirmButton == null) return;
+
             var txt = _confirmButton.GetComponentInChildren<Text>();
             if (_currentTab == TabType.Withdraw)
             {
                 txt.text = "Withdraw";
-                _confirmButton.GetComponent<Image>().color = new Color(0.8f, 0.3f, 0.3f);
+                _confirmButton.GetComponent<Image>().color = new Color32(204, 77, 77, 255);
                 _confirmButton.interactable = true;
             }
             else
@@ -356,7 +362,7 @@ namespace BankApp
                 }
                 else
                 {
-                    _confirmButton.GetComponent<Image>().color = new Color(0.3f, 0.8f, 0.3f);
+                    _confirmButton.GetComponent<Image>().color = new Color32(77, 204, 77, 255);
                     _confirmButton.interactable = true;
                 }
             }
@@ -379,7 +385,8 @@ namespace BankApp
                 if (img != null) btn.targetGraphic = img;
             }
             btn.onClick.RemoveAllListeners();
-            btn.onClick.AddListener((UnityAction)(() => {
+            btn.onClick.AddListener((UnityAction)(() =>
+            {
                 panel.SetActive(true);
                 panel.transform.SetAsLastSibling();
                 MelonLogger.Msg("Bank app opened.");
@@ -419,13 +426,13 @@ namespace BankApp
             {
                 mm.CreateOnlineTransaction("ATM Withdrawal", -_selectedAmount, 1f, "ATM out");
                 mm.ChangeCashBalance(_selectedAmount, true, true);
-                MelonLogger.Msg($"[WITHDRAW] ${_selectedAmount:N2} done");
+                MelonLogger.Msg($"[WITHDRAW] ${_selectedAmount:N0} done");
                 UpdateSelectedAmount(0);
                 UpdateBalanceText();
             }
             else
             {
-                MelonLogger.Msg($"[WITHDRAW] Insufficient. Online:{mm.onlineBalance:N2}");
+                MelonLogger.Msg($"[WITHDRAW] Insufficient. Online:{mm.onlineBalance:N0}");
             }
         }
 
@@ -443,13 +450,13 @@ namespace BankApp
                 mm.CreateOnlineTransaction("ATM Deposit", _selectedAmount, 1f, "ATM in");
                 mm.ChangeCashBalance(-_selectedAmount, true, true);
                 ATM.WeeklyDepositSum += _selectedAmount;
-                MelonLogger.Msg($"[DEPOSIT] ${_selectedAmount:N2} done");
+                MelonLogger.Msg($"[DEPOSIT] ${_selectedAmount:N0} done");
                 UpdateSelectedAmount(0);
                 UpdateBalanceText();
             }
             else
             {
-                MelonLogger.Msg($"[DEPOSIT] Insufficient cash:{mm.cashBalance:N2}");
+                MelonLogger.Msg($"[DEPOSIT] Insufficient cash:{mm.cashBalance:N0}");
             }
         }
 
@@ -459,9 +466,9 @@ namespace BankApp
             if (_selectedAmountText != null)
             {
                 if (_currentTab == TabType.Withdraw)
-                    _selectedAmountText.text = $"Withdraw: ${_selectedAmount:N2}";
+                    _selectedAmountText.text = $"${_selectedAmount:N0}";
                 else
-                    _selectedAmountText.text = $"Deposit: ${_selectedAmount:N2}";
+                    _selectedAmountText.text = $"${_selectedAmount:N0}";
             }
         }
 
@@ -471,9 +478,9 @@ namespace BankApp
             if (_selectedAmountText != null)
             {
                 if (_currentTab == TabType.Withdraw)
-                    _selectedAmountText.text = $"Withdraw: ${_selectedAmount:N2}";
+                    _selectedAmountText.text = $"${_selectedAmount:N0}";
                 else
-                    _selectedAmountText.text = $"Deposit: ${_selectedAmount:N2}";
+                    _selectedAmountText.text = $"${_selectedAmount:N0}";
             }
         }
 
@@ -482,9 +489,9 @@ namespace BankApp
             var mm = NetworkSingleton<MoneyManager>.Instance;
             if (mm == null) return;
             if (_onlineBalanceText != null)
-                _onlineBalanceText.text = $"Online Balance: ${mm.onlineBalance:N2}";
+                _onlineBalanceText.text = $"${mm.onlineBalance:N0}";
             if (_cashBalanceText != null)
-                _cashBalanceText.text = $"Cash Balance:   ${mm.cashBalance:N2}";
+                _cashBalanceText.text = $"${mm.cashBalance:N0}";
             if (_weeklyAmountText != null)
                 _weeklyAmountText.text = $"Weekly: ${ATM.WeeklyDepositSum}/{_weeklyDepositLimit}";
             if (_currentTab == TabType.Deposit) UpdateConfirmButtonLayout();
@@ -496,7 +503,10 @@ namespace BankApp
     [RegisterTypeInIl2Cpp]
     public class BankingAppComponent : MonoBehaviour
     {
-        public BankingAppComponent(IntPtr ptr) : base(ptr) { }
+        public BankingAppComponent(IntPtr ptr) : base(ptr)
+        {
+        }
+
         public void Start() => MelonLogger.Msg("BankingAppComponent: Starting");
     }
 }
