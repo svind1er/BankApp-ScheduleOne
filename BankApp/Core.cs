@@ -52,14 +52,42 @@ namespace BankApp
 
         private float _lastProgressRatio = 0f;
 
+        private MelonPreferences_Entry<bool> _disableWeeklyDepositLimit;
+        private MelonPreferences_Entry<int> _WeeklyDepositResetInterval;
+        private float _timeSinceLastReset = 0f;
+
         public override void OnInitializeMelon()
         {
             MelonLogger.Msg("BankingApp: Initializing mod...");
-
-            MelonLoader.MelonCoroutines.Start(EnsureIconFileExists());
-
+            loadPreferences();
+            EnsureUserDataFolderExists();
+            MelonCoroutines.Start(EnsureIconFileExists());
             ClassInjector.RegisterTypeInIl2Cpp<BankingAppComponent>();
+
             MelonLogger.Msg("BankingApp: Successfully registered BankingAppComponent type");
+        }
+
+        void loadPreferences()
+        {
+            MelonLogger.Msg("Loading preferences...");
+            var preferences = MelonPreferences.CreateCategory("BankApp", "Banking App");
+            preferences.SetFilePath("UserData/BankApp/BankApp.cfg", autoload: true);
+            preferences.LoadFromFile();
+            _disableWeeklyDepositLimit = preferences.CreateEntry<bool>(
+                "DisableWeeklyDepositLimit",
+                true,
+                "Disable Weekly Deposit Limit",
+                "Disable the weekly deposit limit for the ATM and BankApp."
+            );
+
+            _WeeklyDepositResetInterval = preferences.CreateEntry<int>(
+                "WeeklyDepositResetInterval",
+                10,
+                "Weekly Deposit Reset Interval",
+                "The interval in seconds after which the weekly deposit limit resets."
+            );
+            preferences.SaveToFile();
+            MelonLogger.Msg("Preferences loaded.");
         }
 
         public override void OnSceneWasLoaded(int buildIndex, string sceneName)
@@ -89,12 +117,22 @@ namespace BankApp
                 CreateOrEnsureAppAndIcon();
             }
             UpdateBalanceText();
+            ResetWeeklyDepositSum();
+        }
+
+        private void EnsureUserDataFolderExists()
+        {
+            string directoryPath = Path.Combine("UserData", "BankApp");
+            if (!Directory.Exists(directoryPath))
+            {
+                Directory.CreateDirectory(directoryPath);
+                MelonLogger.Msg($"Created missing directory at '{directoryPath}'.");
+            }
         }
 
         private IEnumerator EnsureIconFileExists()
         {
-            string modFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string filePath = Path.Combine(modFolder, iconFileName);
+            string filePath = Path.Combine("UserData/BankApp", iconFileName);
 
             if (!File.Exists(filePath))
             {
@@ -118,6 +156,24 @@ namespace BankApp
             else
             {
                 MelonLogger.Msg("Icon already present at " + filePath);
+            }
+        }
+
+        // ATM.DepositLimitEnabled is a const so resetting WeeklyDepositSum
+        // is the only way :/
+        private void ResetWeeklyDepositSum()
+        {
+            if (!_disableWeeklyDepositLimit.Value)
+                return;
+
+            _timeSinceLastReset += Time.deltaTime;
+            int resetIntervalSeconds = _WeeklyDepositResetInterval.Value;
+
+            if (_timeSinceLastReset >= resetIntervalSeconds)
+            {
+                ATM.WeeklyDepositSum = 0f;
+                _timeSinceLastReset = 0f;
+                UpdateBalanceText();
             }
         }
 
@@ -246,8 +302,7 @@ namespace BankApp
 
         private IEnumerator SetActiveIconSprite(Image targetImage)
         {
-            string modFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string filePath = Path.Combine(modFolder, iconFileName);
+            string filePath = Path.Combine("UserData/BankApp", iconFileName);
             if (!File.Exists(filePath))
             {
                 MelonLogger.Error("Icon file not found at " + filePath);
