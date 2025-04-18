@@ -9,7 +9,7 @@ using Il2CppScheduleOne.DevUtilities;
 using Il2CppScheduleOne.Money;
 using UnityEngine.Events;
 
-[assembly: MelonInfo(typeof(BankApp.Core), "BankApp", "2.0.0", "svindler, Lalisa", null)]
+[assembly: MelonInfo(typeof(BankApp.Core), "BankApp", "2.0.1", "svindler, Lalisa", null)]
 [assembly: MelonGame("TVGS", "Schedule I")]
 [assembly: MelonColor(0, 255, 0, 249)]
 [assembly: MelonAuthorColor(0, 234, 0, 255)]
