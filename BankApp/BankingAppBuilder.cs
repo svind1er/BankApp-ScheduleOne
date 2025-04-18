@@ -136,7 +136,7 @@ namespace BankApp
             barLayout.preferredHeight = 8;
 
             var progressBarBg = progressBarGO.AddComponent<Image>();
-            progressBarBg.sprite = roundedEdgeSprite;
+            progressBarBg.sprite = defaultSprite;
             progressBarBg.type = Image.Type.Sliced;
             progressBarBg.color = ColorPalette.PROGRESSBAR_BG;
             progressBarBg.m_PixelsPerUnitMultiplier = 40f;
@@ -151,7 +151,7 @@ namespace BankApp
             WeeklyProgressFill = progressBarFillRT;
 
             var progressBarFill = progressBarFillGO.AddComponent<Image>();
-            progressBarFill.sprite = roundedEdgeSprite;
+            progressBarFill.sprite = defaultSprite;
             progressBarFill.type = Image.Type.Simple;
             progressBarFill.color = ColorPalette.PROGRESSBAR_FILL;
             progressBarFill.m_PixelsPerUnitMultiplier = 1f;
