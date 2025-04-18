@@ -552,6 +552,14 @@ namespace BankApp
                 MelonLogger.Msg("[DEPOSIT] Zero not allowed.");
                 return;
             }
+
+            int remaining = DepositMax();
+            if (_selectedAmount > remaining)
+            {
+                MelonLogger.Msg($"[DEPOSIT] Exceeds weekly limit. You can only deposit up to ${remaining:N0} this week.");
+                return;
+            }
+
             var mm = NetworkSingleton<MoneyManager>.Instance;
             if (mm == null) { MelonLogger.Error("MoneyManager missing"); return; }
             if (mm.cashBalance >= _selectedAmount)
@@ -571,11 +579,14 @@ namespace BankApp
 
         private void UpdateSelectedAmount(int amt)
         {
-            _selectedAmount = (amt == 0) ? 0f : _selectedAmount + amt;
+            _selectedAmount = (amt == 0)
+                ? 0f
+                : _selectedAmount + amt;
+
+                _selectedAmount = Mathf.Min(_selectedAmount, DepositMax());
+
             if (_selectedAmountText != null)
-            {
                 _selectedAmountText.text = $"${_selectedAmount:N0}";
-            }
         }
 
         private void SetSelectedAmount(int amt)
