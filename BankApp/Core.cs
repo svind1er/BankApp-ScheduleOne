@@ -75,7 +75,7 @@ namespace BankApp
             preferences.LoadFromFile();
             _disableWeeklyDepositLimit = preferences.CreateEntry<bool>(
                 "DisableWeeklyDepositLimit",
-                true,
+                false,
                 "Disable Weekly Deposit Limit",
                 "Disable the weekly deposit limit for the ATM and BankApp."
             );
