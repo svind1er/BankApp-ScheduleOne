@@ -9,7 +9,7 @@ using Il2CppScheduleOne.DevUtilities;
 using Il2CppScheduleOne.Money;
 using UnityEngine.Events;
 
-[assembly: MelonInfo(typeof(BankApp.Core), "BankApp", "1.0.0", "svindler, Lalisa", null)]
+[assembly: MelonInfo(typeof(BankApp.Core), "BankApp", "2.0.0", "svindler, Lalisa", null)]
 [assembly: MelonGame("TVGS", "Schedule I")]
 [assembly: MelonColor(0, 255, 0, 249)]
 [assembly: MelonAuthorColor(0, 234, 0, 255)]
@@ -47,7 +47,9 @@ namespace BankApp
         private GameObject _withdrawTab;
         private GameObject _depositTab;
 
-        private enum TabType { Withdraw, Deposit }
+        private enum TabType
+        { Withdraw, Deposit }
+
         private TabType _currentTab = TabType.Deposit;
 
         private float _lastProgressRatio = 0f;
@@ -67,7 +69,7 @@ namespace BankApp
             MelonLogger.Msg("BankingApp: Successfully registered BankingAppComponent type");
         }
 
-        void loadPreferences()
+        private void loadPreferences()
         {
             MelonLogger.Msg("Loading preferences...");
             var preferences = MelonPreferences.CreateCategory("BankApp", "Banking App");
@@ -461,12 +463,12 @@ namespace BankApp
                 }
                 else
                 {
-                    _confirmButton.GetComponent<Image>().color = new Color32(5, 150, 105, 255);  
+                    _confirmButton.GetComponent<Image>().color = new Color32(5, 150, 105, 255);
 
                     var colors = _confirmButton.colors;
-                    colors.normalColor = new Color32(5, 150, 105, 255);   
-                    colors.highlightedColor = new Color32(4, 120, 87, 255);  
-                    colors.pressedColor = new Color32(3, 89, 64, 255);       
+                    colors.normalColor = new Color32(5, 150, 105, 255);
+                    colors.highlightedColor = new Color32(4, 120, 87, 255);
+                    colors.pressedColor = new Color32(3, 89, 64, 255);
                     colors.selectedColor = colors.normalColor;
                     _confirmButton.colors = colors;
 
@@ -628,7 +630,10 @@ namespace BankApp
     [RegisterTypeInIl2Cpp]
     public class BankingAppComponent : MonoBehaviour
     {
-        public BankingAppComponent(IntPtr ptr) : base(ptr) { }
+        public BankingAppComponent(IntPtr ptr) : base(ptr)
+        {
+        }
+
         public void Start() => MelonLogger.Msg("BankingAppComponent: Starting");
     }
 }
