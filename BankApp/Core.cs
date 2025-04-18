@@ -59,8 +59,8 @@ namespace BankApp
         public override void OnInitializeMelon()
         {
             MelonLogger.Msg("BankingApp: Initializing mod...");
-            loadPreferences();
             EnsureUserDataFolderExists();
+            loadPreferences();
             MelonCoroutines.Start(EnsureIconFileExists());
             ClassInjector.RegisterTypeInIl2Cpp<BankingAppComponent>();
 
