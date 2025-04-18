@@ -379,13 +379,14 @@ namespace BankApp
             _currentTab = tab;
             var wImg = _withdrawTab.GetComponent<Image>();
             var dImg = _depositTab.GetComponent<Image>();
+
             wImg.color = (tab == TabType.Withdraw)
-                ? new Color32(8, 145, 178, 255)
-                : new Color32(31, 41, 55, 255);
+                ? ColorPalette.TABBUTTON_ACTIVE
+                : ColorPalette.TABBUTTON_DISABLED;
 
             dImg.color = (tab == TabType.Deposit)
-                ? new Color32(8, 145, 178, 255)
-                : new Color32(31, 41, 55, 255);
+                ? ColorPalette.TABBUTTON_ACTIVE
+                : ColorPalette.TABBUTTON_DISABLED;
 
             var wBtn = _withdrawTab.GetComponent<Button>();
             var dBtn = _depositTab.GetComponent<Button>();
@@ -393,22 +394,22 @@ namespace BankApp
             var wc = wBtn.colors;
             wc.normalColor = wImg.color;
             wc.highlightedColor = tab == TabType.Withdraw
-                ? new Color32(14, 116, 144, 255)
-                : new Color32(55, 65, 81, 255);
+                ? ColorPalette.TABBUTTON_ACTIVE_HOVER
+                : ColorPalette.TABBUTTON_DISABLED_HOVER;
             wc.pressedColor = tab == TabType.Withdraw
-                ? new Color32(7, 89, 110, 255)
-                : new Color32(25, 33, 44, 255);
+                ? ColorPalette.TABBUTTON_ACTIVE_HOVER
+                : ColorPalette.TABBUTTON_DISABLED_HOVER;
             wc.selectedColor = wc.normalColor;
             wBtn.colors = wc;
 
             var dc = dBtn.colors;
             dc.normalColor = dImg.color;
             dc.highlightedColor = tab == TabType.Deposit
-                ? new Color32(14, 116, 144, 255)
-                : new Color32(55, 65, 81, 255);
+                ? ColorPalette.TABBUTTON_ACTIVE_HOVER
+                : ColorPalette.TABBUTTON_DISABLED_HOVER;
             dc.pressedColor = tab == TabType.Deposit
-                ? new Color32(7, 89, 110, 255)
-                : new Color32(25, 33, 44, 255);
+                ? ColorPalette.TABBUTTON_ACTIVE_HOVER
+                : ColorPalette.TABBUTTON_DISABLED_HOVER;
             dc.selectedColor = dc.normalColor;
             dBtn.colors = dc;
 
@@ -439,12 +440,12 @@ namespace BankApp
             if (_currentTab == TabType.Withdraw)
             {
                 txt.text = "Withdraw";
-                _confirmButton.GetComponent<Image>().color = new Color32(204, 77, 77, 255);
+                _confirmButton.GetComponent<Image>().color = ColorPalette.CONFIRMBUTTON_DEFAULT;
 
                 var colors = _confirmButton.colors;
-                colors.normalColor = new Color32(204, 77, 77, 255);
-                colors.highlightedColor = new Color32(184, 57, 57, 255);     
-                colors.pressedColor = new Color32(164, 37, 37, 255);        
+                colors.normalColor = ColorPalette.CONFIRMBUTTON_DEFAULT;
+                colors.highlightedColor = ColorPalette.CONFIRMBUTTON_HOVERED;
+                colors.pressedColor = new Color32(164, 37, 37, 255);
                 colors.selectedColor = colors.normalColor;
                 _confirmButton.colors = colors;
 

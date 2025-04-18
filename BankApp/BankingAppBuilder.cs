@@ -8,6 +8,24 @@ using System.Reflection.Metadata;
 
 namespace BankApp
 {
+
+    public static class ColorPalette
+    {
+        public static readonly Color32 PROGRESSBAR_BG = new Color32(31, 41, 55, 255);
+        public static readonly Color32 PROGRESSBAR_FILL = new Color32(8, 145, 178, 255);
+        public static readonly Color32 ONLINEBAL = new Color32(34, 211, 238, 255);
+        public static readonly Color32 CASHBAL = new Color32(52, 211, 153, 255);
+        public static readonly Color32 TABBUTTON_ACTIVE = new Color32(8, 145, 178, 255);
+        public static readonly Color32 TABBUTTON_ACTIVE_HOVER = new Color32(14, 116, 144, 255);
+        public static readonly Color32 TABBUTTON_DISABLED = new Color32(31, 41, 55, 255);
+        public static readonly Color32 TABBUTTON_DISABLED_HOVER = new Color32(55, 65, 81, 255);
+        public static readonly Color32 AMOUNTBUTTONS_DEFAULT = new Color32(31, 41, 55, 255);
+        public static readonly Color32 AMOUNTBUTTONS_HOVER = new Color32(55, 65, 81, 255);
+        public static readonly Color32 AMOUNTBUTTONS_CLICKED = new Color32(20, 24, 29, 255);
+        public static readonly Color32 CONFIRMBUTTON_DEFAULT = new Color32(5, 150, 105, 255);
+        public static readonly Color32 CONFIRMBUTTON_HOVERED = new Color32(4, 120, 87, 255);
+    }
+
     public class BankingAppBuilder
     {
         private readonly GameObject _container;
@@ -117,11 +135,10 @@ namespace BankApp
             barLayout.minHeight = 8;
             barLayout.preferredHeight = 8;
 
-
             var progressBarBg = progressBarGO.AddComponent<Image>();
             progressBarBg.sprite = roundedEdgeSprite;
             progressBarBg.type = Image.Type.Sliced;
-            progressBarBg.color = new Color32(31, 41, 55, 255);
+            progressBarBg.color = ColorPalette.PROGRESSBAR_BG;
             progressBarBg.m_PixelsPerUnitMultiplier = 40f;
 
             var progressBarFillGO = new GameObject("ProgressFill");
@@ -136,8 +153,8 @@ namespace BankApp
             var progressBarFill = progressBarFillGO.AddComponent<Image>();
             progressBarFill.sprite = roundedEdgeSprite;
             progressBarFill.type = Image.Type.Simple;
-            progressBarFill.color = new Color32(59, 130, 246, 255);
-            progressBarFill.m_PixelsPerUnitMultiplier = 40f;
+            progressBarFill.color = ColorPalette.PROGRESSBAR_FILL;
+            progressBarFill.m_PixelsPerUnitMultiplier = 1f;
 
             var balanceGO = new GameObject("Balance");
             balanceGO.transform.SetParent(headerGO.transform, false);
@@ -168,7 +185,7 @@ namespace BankApp
             cashBalanceLabel.text = "Cash Balance";
             cashBalanceLabel.alignment = TextAnchor.MiddleCenter;
 
-            CashBalanceText = CreateText("CashBalanceText", cashBalanceGO.transform, 20, new Color32(52, 211, 153, 255));
+            CashBalanceText = CreateText("CashBalanceText", cashBalanceGO.transform, 20, ColorPalette.CASHBAL);
             CashBalanceText.text = "$0.00";
             CashBalanceText.alignment = TextAnchor.MiddleCenter;
             CashBalanceText.fontStyle = FontStyle.Bold;
@@ -185,7 +202,7 @@ namespace BankApp
             onlineBalanceLabel.text = "Online Balance";
             onlineBalanceLabel.alignment = TextAnchor.MiddleCenter;
 
-            OnlineBalanceText = CreateText("OnlineBalanceText", onlineBalanceGO.transform, 20, new Color32(34, 211, 238, 255));
+            OnlineBalanceText = CreateText("OnlineBalanceText", onlineBalanceGO.transform, 20, ColorPalette.ONLINEBAL);
             OnlineBalanceText.text = "$0.00";
             OnlineBalanceText.alignment = TextAnchor.MiddleCenter;
             OnlineBalanceText.fontStyle = FontStyle.Bold;
@@ -255,16 +272,16 @@ namespace BankApp
                 var btnImg = btnGO.AddComponent<Image>();
                 btnImg.sprite = buttonSprite;
                 btnImg.type = Image.Type.Sliced;
-                btnImg.color = new Color32(31, 41, 55, 255);
+                btnImg.color = ColorPalette.AMOUNTBUTTONS_DEFAULT;
                 btnImg.m_PixelsPerUnitMultiplier = 40f;
 
                 var btn = btnGO.AddComponent<Button>();
                 btn.targetGraphic = btnImg;
 
                 var colors = btn.colors;
-                colors.normalColor = btnImg.color;
-                colors.highlightedColor = new Color32(55, 65, 81, 255);
-                colors.pressedColor = new Color32(20, 24, 29, 255);
+                colors.normalColor = Color.white;
+                colors.highlightedColor = ColorPalette.AMOUNTBUTTONS_HOVER;
+                colors.pressedColor = ColorPalette.AMOUNTBUTTONS_CLICKED;
                 colors.selectedColor = btnImg.color;
                 btn.colors = colors;
 
@@ -295,16 +312,16 @@ namespace BankApp
             var clearImg = clearGO.AddComponent<Image>();
             clearImg.sprite = buttonSprite;
             clearImg.type = Image.Type.Sliced;
-            clearImg.color = new Color32(31, 41, 55, 255);
+            clearImg.color = Color.white;
             clearImg.m_PixelsPerUnitMultiplier = 40f;
 
             ResetButton = clearGO.AddComponent<Button>();
             ResetButton.targetGraphic = clearImg;
             var clearColors = ResetButton.colors;
-            clearColors.normalColor = clearImg.color;
-            clearColors.highlightedColor = new Color32(55, 65, 81, 255);
-            clearColors.pressedColor = new Color32(20, 24, 29, 255);
-            clearColors.selectedColor = clearImg.color;
+            clearImg.color = ColorPalette.AMOUNTBUTTONS_DEFAULT;
+            clearColors.normalColor = Color.white;
+            clearColors.highlightedColor = ColorPalette.AMOUNTBUTTONS_HOVER;
+            clearColors.pressedColor = ColorPalette.AMOUNTBUTTONS_CLICKED;
             ResetButton.colors = clearColors;
 
             var clearText = CreateText("Text", clearGO.transform, 16, Color.white);
@@ -318,17 +335,18 @@ namespace BankApp
             var maxImg = maxGO.AddComponent<Image>();
             maxImg.sprite = buttonSprite;
             maxImg.type = Image.Type.Sliced;
-            maxImg.color = new Color32(31, 41, 55, 255);
+            maxImg.color = Color.white;
             maxImg.m_PixelsPerUnitMultiplier = 40f;
 
             MaxButton = maxGO.AddComponent<Button>();
             MaxButton.targetGraphic = maxImg;
             var maxColors = MaxButton.colors;
-            maxColors.normalColor = maxImg.color;
-            maxColors.highlightedColor = new Color32(55, 65, 81, 255);
-            maxColors.pressedColor = new Color32(20, 24, 29, 255);
-            maxColors.selectedColor = maxImg.color;
+            maxImg.color = ColorPalette.AMOUNTBUTTONS_DEFAULT;
+            maxColors.normalColor = Color.white;
+            maxColors.highlightedColor = ColorPalette.AMOUNTBUTTONS_HOVER;
+            maxColors.pressedColor = ColorPalette.AMOUNTBUTTONS_CLICKED;
             MaxButton.colors = maxColors;
+
             var maxText = CreateText("Text", maxGO.transform, 16, Color.white);
             maxText.text = "MAX";
             maxText.alignment = TextAnchor.MiddleCenter;
@@ -345,15 +363,15 @@ namespace BankApp
             var confirmImg = confirmGO.AddComponent<Image>();
             confirmImg.sprite = buttonSprite;
             confirmImg.type = Image.Type.Sliced;
-            confirmImg.color = new Color32(5, 150, 105, 255);
+            confirmImg.color = ColorPalette.CONFIRMBUTTON_DEFAULT;
             confirmImg.m_PixelsPerUnitMultiplier = 40f;
 
             ConfirmButton = confirmGO.AddComponent<Button>();
             ConfirmButton.targetGraphic = confirmImg;
             var confirmColors = ConfirmButton.colors;
-            confirmColors.normalColor = confirmImg.color;
-            confirmColors.highlightedColor = new Color32(4, 120, 87, 255);
-            confirmColors.pressedColor = new Color32(3, 89, 64, 255);
+            confirmColors.normalColor = ColorPalette.CONFIRMBUTTON_DEFAULT;
+            confirmColors.highlightedColor = ColorPalette.CONFIRMBUTTON_HOVERED;
+            confirmColors.pressedColor = confirmColors.pressedColor;
             confirmColors.selectedColor = confirmImg.color;
             ConfirmButton.colors = confirmColors;
 
