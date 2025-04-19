@@ -32,7 +32,7 @@ This mod introduces a **fully functional banking app** that brings the power of 
 # 🛠️ Changelogs
 ## version 2.0.2
 - Fixed issue where you couldnt withdraw anything on max weekly limit.
-- Added feature that disables deposit/withdraw button on insufficient funds or 0.
+- Added a feature that disables deposit/withdraw button on insufficient funds or 0.
 ## version 2.0.1
 - Fixed issue with limit being ignored when enabled under certain conditions.
 ## version 2.0.0
