@@ -439,41 +439,58 @@ namespace BankApp
             if (_confirmButton == null) return;
 
             var txt = _confirmButton.GetComponentInChildren<Text>();
+            var mm = NetworkSingleton<MoneyManager>.Instance;
+            if (mm == null) return;
+
             if (_currentTab == TabType.Withdraw)
             {
                 txt.text = "Withdraw";
-                _confirmButton.GetComponent<Image>().color = ColorPalette.CONFIRMBUTTON_DEFAULT;
+                bool canWithdraw = _selectedAmount > 0 && _selectedAmount <= mm.onlineBalance;
+
+                _confirmButton.GetComponent<Image>().color = canWithdraw ? ColorPalette.CONFIRMBUTTON_DEFAULT : Color.gray;
 
                 var colors = _confirmButton.colors;
-                colors.normalColor = ColorPalette.CONFIRMBUTTON_DEFAULT;
-                colors.highlightedColor = ColorPalette.CONFIRMBUTTON_HOVERED;
-                colors.pressedColor = new Color32(164, 37, 37, 255);
+                colors.normalColor = canWithdraw
+                    ? ColorPalette.CONFIRMBUTTON_DEFAULT
+                    : Color.gray;
+                colors.highlightedColor = canWithdraw
+                    ? ColorPalette.CONFIRMBUTTON_HOVERED
+                    : Color.gray;
+                colors.pressedColor = canWithdraw
+                    ? new Color32(164, 37, 37, 255)
+                    : Color.gray;
                 colors.selectedColor = colors.normalColor;
                 _confirmButton.colors = colors;
 
-                _confirmButton.interactable = true;
+                _confirmButton.interactable = canWithdraw;
             }
             else
             {
                 txt.text = "Deposit";
-                if (DepositMax() <= 0)
-                {
-                    _confirmButton.GetComponent<Image>().color = Color.gray;
-                    _confirmButton.interactable = false;
-                }
-                else
-                {
-                    _confirmButton.GetComponent<Image>().color = new Color32(5, 150, 105, 255);
 
-                    var colors = _confirmButton.colors;
-                    colors.normalColor = new Color32(5, 150, 105, 255);
-                    colors.highlightedColor = new Color32(4, 120, 87, 255);
-                    colors.pressedColor = new Color32(3, 89, 64, 255);
-                    colors.selectedColor = colors.normalColor;
-                    _confirmButton.colors = colors;
+                int depositMax = DepositMax();
+                bool canDeposit = _selectedAmount > 0
+                                  && _selectedAmount <= depositMax
+                                  && _selectedAmount <= mm.cashBalance;
 
-                    _confirmButton.interactable = true;
-                }
+                _confirmButton.GetComponent<Image>().color = canDeposit
+                    ? ColorPalette.CONFIRMBUTTON_DEFAULT
+                    : Color.gray;
+
+                var colors = _confirmButton.colors;
+                colors.normalColor = canDeposit
+                    ? ColorPalette.CONFIRMBUTTON_DEFAULT
+                    : Color.gray;
+                colors.highlightedColor = canDeposit
+                    ? ColorPalette.CONFIRMBUTTON_HOVERED
+                    : Color.gray;
+                colors.pressedColor = canDeposit
+                    ? new Color32(3, 89, 64, 255)
+                    : Color.gray;
+                colors.selectedColor = colors.normalColor;
+                _confirmButton.colors = colors;
+
+                _confirmButton.interactable = canDeposit;
             }
         }
 
@@ -531,7 +548,7 @@ namespace BankApp
             }
             var mm = NetworkSingleton<MoneyManager>.Instance;
             if (mm == null) { MelonLogger.Error("MoneyManager missing"); return; }
-            if (mm.onlineBalance > _selectedAmount)
+            if (mm.onlineBalance >= _selectedAmount)
             {
                 mm.CreateOnlineTransaction("ATM Withdrawal", -_selectedAmount, 1f, "ATM out");
                 mm.ChangeCashBalance(_selectedAmount, true, true);
@@ -541,7 +558,7 @@ namespace BankApp
             }
             else
             {
-                MelonLogger.Msg($"[WITHDRAW] Insufficient. Online:{mm.onlineBalance:N0}");
+                MelonLogger.Msg($"[WITHDRAW] Attempted withdrawal: {_selectedAmount:N0} | Insufficient Online Balance:{mm.onlineBalance:N0}");
             }
         }
 
@@ -573,7 +590,7 @@ namespace BankApp
             }
             else
             {
-                MelonLogger.Msg($"[DEPOSIT] Insufficient cash:{mm.cashBalance:N0}");
+                MelonLogger.Msg($"[DEPOSIT] Attempted deposit: {_selectedAmount:N0} | Insufficient cash:{mm.cashBalance:N0}");
             }
         }
 
@@ -583,10 +600,13 @@ namespace BankApp
                 ? 0f
                 : _selectedAmount + amt;
 
+            if (_currentTab == TabType.Deposit)
                 _selectedAmount = Mathf.Min(_selectedAmount, DepositMax());
 
             if (_selectedAmountText != null)
                 _selectedAmountText.text = $"${_selectedAmount:N0}";
+
+            UpdateConfirmButtonLayout();
         }
 
         private void SetSelectedAmount(int amt)
