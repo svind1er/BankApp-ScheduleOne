@@ -7,11 +7,10 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
-using UnityEngine.Networking;
 using UnityEngine.UI;
 using Object = UnityEngine.Object;
 
-[assembly: MelonInfo(typeof(Core), "BankApp", "2.0.3", "svindler, Lalisa")]
+[assembly: MelonInfo(typeof(Core), "BankApp", "2.0.4", "svindler, Lalisa")]
 [assembly: MelonGame("TVGS", "Schedule I")]
 [assembly: MelonColor(0, 255, 0, 249)]
 [assembly: MelonAuthorColor(0, 234, 0, 255)]
@@ -20,54 +19,63 @@ namespace BankApp;
 
 public class Core : MelonMod
 {
-    const string TEMPLATE_APP_NAME = "Messages";
-    const string APP_OBJECT_NAME = "BankingApp";
-    const string APP_LABEL_TEXT = "Bank";
+    private const string TEMPLATE_APP_NAME = "Messages";
+    private const string APP_OBJECT_NAME = "BankingApp";
+    private const string APP_LABEL_TEXT = "Bank";
 
-    readonly string iconFileName = "BankAppIcon.png";
-    readonly string iconUrl = "https://i.imgur.com/hsVNqRx.png";
-    bool _appCreated;
+    private const string ICON_RESOURCE_NAME = "BankApp.bankappicon.png";
+    private bool _appCreated;
 
-    bool _appSetupAttempted;
-    GameObject _bankingAppPanel;
-    Text _cashBalanceText;
+    private bool _appSetupAttempted;
+    private GameObject _bankingAppPanel;
+    private Text _cashBalanceText;
 
-    Button _confirmButton;
+    private Button _confirmButton;
 
-    TabType _currentTab = TabType.Deposit;
-    GameObject _depositTab;
+    private TabType _currentTab = TabType.Deposit;
+    private GameObject _depositTab;
 
-    MelonPreferences_Entry<bool> _disableWeeklyDepositLimit;
-    bool _iconModified;
+    private MelonPreferences_Entry<bool> _disableWeeklyDepositLimit;
+    private bool _iconModified;
 
-    float _lastProgressRatio;
-    Button _maxButton;
+    private float _lastProgressRatio;
+    private Button _maxButton;
 
-    Text _onlineBalanceText;
-    Button _resetButton;
+    private Text _onlineBalanceText;
+    private Button _resetButton;
 
-    float _selectedAmount;
-    Text _selectedAmountText;
-    float _timeSinceLastReset;
-    Text _weeklyAmountText;
-    readonly int _weeklyDepositLimit = (int)ATM.WEEKLY_DEPOSIT_LIMIT;
-    MelonPreferences_Entry<int> _WeeklyDepositResetInterval;
-    RectTransform _weeklyProgressFill;
-    GameObject _withdrawTab;
-    int[] amounts = new[] { 1, 5, 10, 25, 50, 100, 500, 1000 };
+    private float _selectedAmount;
+    private Text _selectedAmountText;
+    private float _timeSinceLastReset;
+    private Text _weeklyAmountText;
+    private readonly int _weeklyDepositLimit = (int)ATM.WEEKLY_DEPOSIT_LIMIT;
+    private MelonPreferences_Entry<int> _WeeklyDepositResetInterval;
+    private RectTransform _weeklyProgressFill;
+    private GameObject _withdrawTab;
+    private int[] amounts = new[] { 1, 5, 10, 25, 50, 100, 500, 1000 };
 
     public override void OnInitializeMelon()
     {
         MelonLogger.Msg("BankingApp: Initializing mod...");
         EnsureUserDataFolderExists();
         loadPreferences();
-        MelonCoroutines.Start(EnsureIconFileExists());
         ClassInjector.RegisterTypeInIl2Cpp<BankingAppComponent>();
 
         MelonLogger.Msg("BankingApp: Successfully registered BankingAppComponent type");
     }
 
-    void loadPreferences()
+    private static byte[] LoadEmbeddedIcon()
+    {
+        var asm = System.Reflection.Assembly.GetExecutingAssembly();
+        using var stream = asm.GetManifestResourceStream("BankApp.Assets.BankAppIcon.png");
+        if (stream == null) return null;
+
+        using var ms = new MemoryStream();
+        stream.CopyTo(ms);
+        return ms.ToArray();
+    }
+
+    private void loadPreferences()
     {
         MelonLogger.Msg("Loading preferences...");
         var preferences = MelonPreferences.CreateCategory("BankApp", "Banking App");
@@ -121,7 +129,7 @@ public class Core : MelonMod
         ResetWeeklyDepositSum();
     }
 
-    void EnsureUserDataFolderExists()
+    private void EnsureUserDataFolderExists()
     {
         var directoryPath = Path.Combine("UserData", "BankApp");
         if (!Directory.Exists(directoryPath))
@@ -131,39 +139,9 @@ public class Core : MelonMod
         }
     }
 
-    IEnumerator EnsureIconFileExists()
-    {
-        var filePath = Path.Combine("UserData/BankApp", iconFileName);
-
-        if (!File.Exists(filePath))
-        {
-            MelonLogger.Msg("Downloading icon from " + iconUrl);
-            var uwr = UnityWebRequest.Get(iconUrl);
-            yield return uwr.SendWebRequest();
-#if UNITY_2020_1_OR_NEWER
-                if (uwr.result != UnityWebRequest.Result.Success)
-#else
-            if (uwr.isNetworkError || uwr.isHttpError)
-#endif
-            {
-                MelonLogger.Error("Icon download failed: " + uwr.error);
-                uwr.Dispose();
-                yield break;
-            }
-
-            File.WriteAllBytes(filePath, uwr.downloadHandler.data);
-            MelonLogger.Msg("Icon saved to " + filePath);
-            uwr.Dispose();
-        }
-        else
-        {
-            MelonLogger.Msg("Icon already present at " + filePath);
-        }
-    }
-
     // ATM.DepositLimitEnabled is a const so resetting WeeklyDepositSum
     // is the only way :/
-    void ResetWeeklyDepositSum()
+    private void ResetWeeklyDepositSum()
     {
         if (!_disableWeeklyDepositLimit.Value)
             return;
@@ -179,7 +157,7 @@ public class Core : MelonMod
         }
     }
 
-    void CreateOrEnsureAppAndIcon()
+    private void CreateOrEnsureAppAndIcon()
     {
         MelonLogger.Msg("Enter CreateOrEnsureAppAndIcon");
 
@@ -278,7 +256,7 @@ public class Core : MelonMod
         MelonLogger.Msg("Exit CreateOrEnsureAppAndIcon");
     }
 
-    IEnumerator UpdateAppIconLabelAndSpriteCoroutine(GameObject iconGO)
+    private IEnumerator UpdateAppIconLabelAndSpriteCoroutine(GameObject iconGO)
     {
         Transform lbl = null;
         for (var i = 0; i < 10 && lbl == null; i++)
@@ -304,16 +282,15 @@ public class Core : MelonMod
         _iconModified = true;
     }
 
-    IEnumerator SetActiveIconSprite(Image targetImage)
+    private IEnumerator SetActiveIconSprite(Image targetImage)
     {
-        var filePath = Path.Combine("UserData/BankApp", iconFileName);
-        if (!File.Exists(filePath))
+        var data = LoadEmbeddedIconBytes();
+        if (data == null || data.Length == 0)
         {
-            MelonLogger.Error("Icon file not found at " + filePath);
+            MelonLogger.Error("Embedded icon resource not found: " + ICON_RESOURCE_NAME);
             yield break;
         }
 
-        var data = File.ReadAllBytes(filePath);
         var tex = CreatePersistentTexture(data);
         if (tex != null)
         {
@@ -332,7 +309,17 @@ public class Core : MelonMod
         }
     }
 
-    void EnsureAppPanelIsSetup(GameObject appPanel)
+    private static byte[] LoadEmbeddedIconBytes()
+    {
+        var asm = System.Reflection.Assembly.GetExecutingAssembly();
+        using var stream = asm.GetManifestResourceStream(ICON_RESOURCE_NAME);
+        if (stream == null) return null;
+        using var ms = new MemoryStream();
+        stream.CopyTo(ms);
+        return ms.ToArray();
+    }
+
+    private void EnsureAppPanelIsSetup(GameObject appPanel)
     {
         if (_appCreated) return;
 
@@ -377,7 +364,7 @@ public class Core : MelonMod
         _appCreated = true;
     }
 
-    void SetActiveTab(TabType tab)
+    private void SetActiveTab(TabType tab)
     {
         _currentTab = tab;
         var wImg = _withdrawTab.GetComponent<Image>();
@@ -426,7 +413,7 @@ public class Core : MelonMod
         UpdateConfirmButtonLayout();
     }
 
-    void UpdateUIForCurrentTab()
+    private void UpdateUIForCurrentTab()
     {
         if (_currentTab == TabType.Withdraw)
             _selectedAmountText.text = $"${_selectedAmount:N0}";
@@ -435,7 +422,7 @@ public class Core : MelonMod
         UpdateSelectedAmount(0);
     }
 
-    void UpdateConfirmButtonLayout()
+    private void UpdateConfirmButtonLayout()
     {
         if (_confirmButton == null) return;
 
@@ -497,13 +484,13 @@ public class Core : MelonMod
         }
     }
 
-    void OnConfirmPressed()
+    private void OnConfirmPressed()
     {
         if (_currentTab == TabType.Withdraw) OnWithdrawPressed();
         else OnDepositPressed();
     }
 
-    void AttachButtonClickEvent(GameObject panel)
+    private void AttachButtonClickEvent(GameObject panel)
     {
         if (panel == null) return;
         var btn = panel.GetComponent<Button>() ?? panel.AddComponent<Button>();
@@ -523,12 +510,12 @@ public class Core : MelonMod
         }));
     }
 
-    Texture2D CreatePersistentTexture(byte[] data)
+    private Texture2D CreatePersistentTexture(byte[] data)
     {
         try
         {
             var tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
-            if (tex.LoadImage(data))
+            if (ImageConversion.LoadImage(tex, data))
             {
                 tex.hideFlags = HideFlags.DontUnloadUnusedAsset;
                 return tex;
@@ -542,12 +529,12 @@ public class Core : MelonMod
         return null;
     }
 
-    void OnSelectAmount(int amt)
+    private void OnSelectAmount(int amt)
     {
         UpdateSelectedAmount(amt);
     }
 
-    void OnWithdrawPressed()
+    private void OnWithdrawPressed()
     {
         if (_selectedAmount <= 0f)
         {
@@ -577,7 +564,7 @@ public class Core : MelonMod
         }
     }
 
-    void OnDepositPressed()
+    private void OnDepositPressed()
     {
         if (_selectedAmount <= 0f)
         {
@@ -615,7 +602,7 @@ public class Core : MelonMod
         }
     }
 
-    void UpdateSelectedAmount(int amt)
+    private void UpdateSelectedAmount(int amt)
     {
         _selectedAmount = amt == 0
             ? 0f
@@ -630,14 +617,14 @@ public class Core : MelonMod
         UpdateConfirmButtonLayout();
     }
 
-    void SetSelectedAmount(float amt)
+    private void SetSelectedAmount(float amt)
     {
         _selectedAmount = amt;
         UpdateConfirmButtonLayout();
         if (_selectedAmountText != null) _selectedAmountText.text = $"${_selectedAmount:N0}";
     }
 
-    void UpdateBalanceText()
+    private void UpdateBalanceText()
     {
         var mm = NetworkSingleton<MoneyManager>.Instance;
         if (mm == null) return;
@@ -660,7 +647,7 @@ public class Core : MelonMod
             UpdateConfirmButtonLayout();
     }
 
-    IEnumerator AnimateProgressBar(float from, float to, float duration)
+    private IEnumerator AnimateProgressBar(float from, float to, float duration)
     {
         var elapsed = 0f;
         while (elapsed < duration)
@@ -675,12 +662,12 @@ public class Core : MelonMod
         _weeklyProgressFill.anchorMax = new Vector2(to, 1f);
     }
 
-    int DepositMax()
+    private int DepositMax()
     {
         return _weeklyDepositLimit - (int)ATM.WeeklyDepositSum;
     }
 
-    enum TabType
+    private enum TabType
     {
         Withdraw,
         Deposit
