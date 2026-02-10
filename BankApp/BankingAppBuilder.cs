@@ -1,6 +1,7 @@
 ﻿using Il2CppScheduleOne.Money;
 using MelonLoader;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
 using Object = UnityEngine.Object;
 
@@ -25,15 +26,15 @@ public static class ColorPalette
 
 public class BankingAppBuilder
 {
-    readonly int[] _amounts = { 1, 5, 10, 25, 50, 100, 500, 1000 };
-    readonly GameObject _container;
+    private readonly int[] _amounts = { 1, 5, 10, 25, 50, 100, 500, 1000 };
+    private readonly GameObject _container;
 
-    readonly Action<int> _onAmountSelected;
-    readonly Action _onConfirm;
-    readonly Action _onDepositTab;
-    readonly Action _onMax;
-    readonly Action _onReset;
-    readonly Action _onWithdrawTab;
+    private readonly Action<int> _onAmountSelected;
+    private readonly Action _onConfirm;
+    private readonly Action _onDepositTab;
+    private readonly Action _onMax;
+    private readonly Action _onReset;
+    private readonly Action _onWithdrawTab;
 
     public BankingAppBuilder(
         GameObject container,
@@ -242,7 +243,6 @@ public class BankingAppBuilder
         tabsHLG.childForceExpandWidth = true;
         tabsHLG.childForceExpandHeight = true;
 
-
         DepositTab = CreateTabButton(tabsGO, "⇧ Deposit", true, _onDepositTab, buttonSprite);
         WithdrawTab = CreateTabButton(tabsGO, "⇩ Withdraw", false, _onWithdrawTab, buttonSprite);
 
@@ -381,7 +381,7 @@ public class BankingAppBuilder
         MelonLogger.Msg("BankingAppBuilder: UI build complete.");
     }
 
-    GameObject CreateTabButton(
+    private GameObject CreateTabButton(
         GameObject parent,
         string label,
         bool active,
@@ -425,7 +425,7 @@ public class BankingAppBuilder
         return go;
     }
 
-    Text CreateText(string name, Transform parent, int size, Color col)
+    private Text CreateText(string name, Transform parent, int size, Color col)
     {
         var go = new GameObject(name);
         go.transform.SetParent(parent, false);
@@ -443,7 +443,7 @@ public class BankingAppBuilder
         return t;
     }
 
-    Sprite GetGameSprite(string spriteName)
+    private Sprite GetGameSprite(string spriteName)
     {
         Sprite[] sprites = Resources.FindObjectsOfTypeAll<Sprite>();
         foreach (var sprite in sprites)
